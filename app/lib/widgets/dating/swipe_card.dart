@@ -8,9 +8,9 @@ import '../core/app_icon.dart';
 
 /// Ported from components/dating/SwipeCard.jsx.
 ///
-/// No real photography ships with this design system (see readme.md), so
-/// the photo layer is a placeholder tile — same intent as the prototype's
-/// `<image-slot>`, without inventing a photo.
+/// Shows the user's uploaded photo (`photoUrl`) when there is one; falls
+/// back to the same placeholder tile the original design system used when
+/// no photography was available at all.
 class CrushapSwipeCard extends StatelessWidget {
   const CrushapSwipeCard({
     super.key,
@@ -20,6 +20,7 @@ class CrushapSwipeCard extends StatelessWidget {
     this.verified = false,
     this.bio,
     this.tags = const [],
+    this.photoUrl,
     this.width = 340,
     this.height = 460,
   });
@@ -30,6 +31,7 @@ class CrushapSwipeCard extends StatelessWidget {
   final bool verified;
   final String? bio;
   final List<String> tags;
+  final String? photoUrl;
   final double width;
   final double height;
 
@@ -47,18 +49,15 @@ class CrushapSwipeCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Photo placeholder (no bundled photography for this brand).
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment(-0.64, -0.94), // ~160deg
-                end: Alignment(0.64, 0.94),
-                colors: [CrushapColors.black4, CrushapColors.black2],
-              ),
-            ),
-            alignment: Alignment.center,
-            child: CrushapIcon('image', size: 40, color: CrushapColors.textTertiary.withValues(alpha: 0.4)),
-          ),
+          if (photoUrl != null)
+            Image.network(
+              photoUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => const _PhotoPlaceholder(),
+              loadingBuilder: (context, child, progress) => progress == null ? child : const _PhotoPlaceholder(),
+            )
+          else
+            const _PhotoPlaceholder(),
           // Bottom scrim for text legibility.
           const DecoratedBox(
             decoration: BoxDecoration(gradient: CrushapColors.gradientScrimBottom),
@@ -135,6 +134,25 @@ class CrushapSwipeCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment(-0.64, -0.94), // ~160deg
+          end: Alignment(0.64, 0.94),
+          colors: [CrushapColors.black4, CrushapColors.black2],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: CrushapIcon('image', size: 40, color: CrushapColors.textTertiary.withValues(alpha: 0.4)),
     );
   }
 }

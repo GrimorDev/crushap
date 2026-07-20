@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/widgets.dart';
 import '../models/profile.dart';
+import '../services/api_client.dart';
 import '../theme/colors.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
@@ -8,13 +10,12 @@ import '../widgets/core/app_icon.dart';
 import '../widgets/forms/app_input.dart';
 import '../widgets/navigation/bottom_nav.dart';
 
-/// New — the "Search" bottom-nav tab. No source screen existed for it
-/// either (same gap as Matches), so this is a straightforward search over
-/// the sample profile pool by name or interest, built only from existing
-/// components (Input, Avatar, Chip).
+/// The "Search" bottom-nav tab — search over every registered user
+/// (`GET /api/search`) by name or interest tag.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key, required this.activeTab, required this.onTabChanged});
+  const SearchScreen({super.key, required this.api, required this.activeTab, required this.onTabChanged});
 
+  final ApiClient api;
   final CrushapNavTab activeTab;
   final ValueChanged<CrushapNavTab> onTabChanged;
 
@@ -24,24 +25,42 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
-  String _query = '';
+  List<Profile> _results = [];
+  bool _loading = true;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _runSearch('');
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () => _runSearch(value));
+  }
+
+  Future<void> _runSearch(String query) async {
+    setState(() => _loading = true);
+    try {
+      final results = await widget.api.search(query);
+      if (mounted) setState(() => _results = results);
+    } catch (_) {
+      if (mounted) setState(() => _results = []);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final query = _query.trim().toLowerCase();
-    final results = query.isEmpty
-        ? sampleProfiles
-        : sampleProfiles.where((p) {
-            return p.name.toLowerCase().contains(query) ||
-                p.tags.any((t) => t.toLowerCase().contains(query));
-          }).toList();
-
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -53,55 +72,64 @@ class _SearchScreenState extends State<SearchScreen> {
                 controller: _controller,
                 placeholder: 'Search by name or interest',
                 icon: const CrushapIcon('search', size: 18, color: CrushapColors.textTertiary),
-                onChanged: (v) => setState(() => _query = v),
+                onChanged: _onChanged,
               ),
             ),
             Expanded(
-              child: results.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No one matches "$query" yet.',
-                        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      itemCount: results.length,
-                      separatorBuilder: (context, i) => const SizedBox(height: 2),
-                      itemBuilder: (context, i) {
-                        final p = results[i];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CrushapAvatar(name: p.name, size: CrushapAvatarSize.md),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
+              child: _loading
+                  ? const SizedBox.shrink()
+                  : _results.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No one matches that yet.',
+                            style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          itemCount: _results.length,
+                          separatorBuilder: (context, i) => const SizedBox(height: 2),
+                          itemBuilder: (context, i) {
+                            final p = _results[i];
+                            final photoUrl = widget.api.mediaUrl(p.photos.isNotEmpty ? p.photos.first : null);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CrushapAvatar(
+                                    name: p.name,
+                                    size: CrushapAvatarSize.md,
+                                    image: photoUrl == null ? null : NetworkImage(photoUrl),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text('${p.name}, ${p.age}', style: CrushapText.body.copyWith(fontWeight: FontWeight.w600)),
-                                        const SizedBox(width: 6),
-                                        Text(p.distance, style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary)),
+                                        Row(
+                                          children: [
+                                            Text('${p.name}, ${p.age}', style: CrushapText.body.copyWith(fontWeight: FontWeight.w600)),
+                                            if (p.distanceLabel != null) ...[
+                                              const SizedBox(width: 6),
+                                              Text(p.distanceLabel!, style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary)),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 6,
+                                          children: [for (final t in p.tags) CrushapChip(label: t)],
+                                        ),
                                       ],
                                     ),
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 6,
-                                      runSpacing: 6,
-                                      children: [for (final t in p.tags) CrushapChip(label: t)],
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ),
             ),
             CrushapBottomNav(active: widget.activeTab, onChanged: widget.onTabChanged),
           ],

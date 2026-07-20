@@ -11,11 +11,15 @@ class CrushapMatchOverlay extends StatelessWidget {
   const CrushapMatchOverlay({
     super.key,
     required this.matchName,
+    this.youPhoto,
+    this.matchPhoto,
     this.onMessage,
     this.onKeepSwiping,
   });
 
   final String matchName;
+  final ImageProvider? youPhoto;
+  final ImageProvider? matchPhoto;
   final VoidCallback? onMessage;
   final VoidCallback? onKeepSwiping;
 
@@ -63,14 +67,14 @@ class CrushapMatchOverlay extends StatelessWidget {
                   height: 112,
                   child: Stack(
                     children: [
-                      const Positioned(
+                      Positioned(
                         left: 0,
                         child: DecoratedBox(
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             boxShadow: CrushapEffects.shadowGlowPrimary,
                           ),
-                          child: CrushapAvatar(name: 'You', size: CrushapAvatarSize.xl),
+                          child: CrushapAvatar(name: 'You', size: CrushapAvatarSize.xl, image: youPhoto),
                         ),
                       ),
                       Positioned(
@@ -80,7 +84,7 @@ class CrushapMatchOverlay extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: CrushapEffects.shadowGlowPrimary,
                           ),
-                          child: CrushapAvatar(name: matchName, size: CrushapAvatarSize.xl),
+                          child: CrushapAvatar(name: matchName, size: CrushapAvatarSize.xl, image: matchPhoto),
                         ),
                       ),
                     ],

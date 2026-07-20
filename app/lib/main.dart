@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'models/chat_message.dart';
 import 'models/profile.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/chat_inbox_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/discover_screen.dart';
@@ -9,6 +9,9 @@ import 'screens/matches_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/search_screen.dart';
+import 'screens/server_setup_screen.dart';
+import 'services/api_client.dart';
+import 'services/session.dart';
 import 'theme/colors.dart';
 import 'widgets/dating/match_overlay.dart';
 import 'widgets/navigation/bottom_nav.dart';
@@ -35,21 +38,16 @@ class CrushapApp extends StatelessWidget {
           selectionHandleColor: CrushapColors.accentPrimary,
         ),
       ),
-      home: const _AppRoot(),
+      // No screen uses Scaffold (the design system's chrome is hand-rolled,
+      // not Material's), but a couple of leaf widgets (TextField) still
+      // require a Material ancestor to satisfy their internal assertions —
+      // one Material here covers the whole app instead of wrapping each.
+      home: const Material(color: CrushapColors.surfaceApp, child: _AppRoot()),
     );
   }
 }
 
-/// Mia is the profile the onboarding/original prototype always demoed with
-/// a pre-filled conversation; every other match starts from a blank thread.
-List<ChatMessage> _seedThreadFor(Profile p) {
-  if (p.id != 'mia') return [];
-  return const [
-    ChatMessage(fromMe: false, text: 'Hey! Your hiking photos are amazing 😄'),
-    ChatMessage(fromMe: true, text: "Ha thanks! That was Half Dome, brutal but worth it"),
-    ChatMessage(fromMe: false, text: "Ok that's officially a date idea"),
-  ];
-}
+ImageProvider? _networkImage(String? url) => url == null ? null : NetworkImage(url);
 
 class _AppRoot extends StatefulWidget {
   const _AppRoot();
@@ -59,23 +57,26 @@ class _AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<_AppRoot> {
-  bool _onboarded = false;
+  Session? _session;
+  ApiClient? _api;
+  bool _showLogin = false;
   CrushapNavTab _tab = CrushapNavTab.discover;
   Profile? _pendingMatch;
-  final List<Profile> _matches = [];
-  final Map<String, List<ChatMessage>> _threads = {};
+
+  @override
+  void initState() {
+    super.initState();
+    Session.load().then((session) {
+      setState(() {
+        _session = session;
+        _api = ApiClient(session);
+      });
+    });
+  }
 
   void _onTabChanged(CrushapNavTab tab) => setState(() => _tab = tab);
 
-  void _onMatch(Profile p) {
-    setState(() {
-      if (!_matches.any((m) => m.id == p.id)) {
-        _matches.add(p);
-        _threads[p.id] = _seedThreadFor(p);
-      }
-      _pendingMatch = p;
-    });
-  }
+  void _onMatch(Profile p) => setState(() => _pendingMatch = p);
 
   void _dismissMatch() => setState(() => _pendingMatch = null);
 
@@ -89,13 +90,11 @@ class _AppRootState extends State<_AppRoot> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ChatScreen(
+          session: _session!,
+          api: _api!,
+          matchId: profile.id,
           matchName: profile.name,
-          initialMessages: _threads[profile.id] ?? const [],
-          onSend: (message) {
-            setState(() {
-              _threads.putIfAbsent(profile.id, () => []).add(message);
-            });
-          },
+          matchPhotoUrl: _api!.mediaUrl(profile.photos.isNotEmpty ? profile.photos.first : null),
           onBack: () => Navigator.of(context).pop(),
         ),
       ),
@@ -108,30 +107,69 @@ class _AppRootState extends State<_AppRoot> {
     );
   }
 
+  void _openServerSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ServerSetupScreen(session: _session!, onSaved: () => Navigator.of(context).pop()),
+      ),
+    );
+  }
+
+  Future<void> _logout() async {
+    await _session!.clearAuth();
+    setState(() => _tab = CrushapNavTab.discover);
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_onboarded) {
-      return OnboardingScreen(onDone: () => setState(() => _onboarded = true));
+    final session = _session;
+    final api = _api;
+    if (session == null || api == null) {
+      return const ColoredBox(color: CrushapColors.surfaceApp);
+    }
+
+    if (!session.hasServer) {
+      return ServerSetupScreen(session: session, onSaved: () => setState(() {}));
+    }
+
+    if (!session.isLoggedIn) {
+      return _showLogin
+          ? LoginScreen(
+              session: session,
+              onLoggedIn: () => setState(() {}),
+              onBack: () => setState(() => _showLogin = false),
+            )
+          : OnboardingScreen(
+              session: session,
+              onDone: () => setState(() {}),
+              onLogin: () => setState(() => _showLogin = true),
+            );
     }
 
     final Widget mainScreen = switch (_tab) {
       CrushapNavTab.discover => DiscoverScreen(
+          api: api,
           onMatch: _onMatch,
           onOpenFilters: _openFilters,
           activeTab: _tab,
           onTabChanged: _onTabChanged,
         ),
       CrushapNavTab.chat => ChatInboxScreen(
-          matches: _matches,
-          threads: _threads,
+          api: api,
           onOpenThread: _openThread,
           activeTab: _tab,
           onTabChanged: _onTabChanged,
         ),
-      CrushapNavTab.profile => ProfileScreen(activeTab: _tab, onTabChanged: _onTabChanged),
-      CrushapNavTab.search => SearchScreen(activeTab: _tab, onTabChanged: _onTabChanged),
+      CrushapNavTab.profile => ProfileScreen(
+          api: api,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+          onOpenServerSettings: _openServerSettings,
+          onLogout: _logout,
+        ),
+      CrushapNavTab.search => SearchScreen(api: api, activeTab: _tab, onTabChanged: _onTabChanged),
       CrushapNavTab.matches => MatchesScreen(
-          matches: _matches,
+          api: api,
           onOpenThread: _openThread,
           activeTab: _tab,
           onTabChanged: _onTabChanged,
@@ -144,6 +182,7 @@ class _AppRootState extends State<_AppRoot> {
         if (_pendingMatch != null)
           CrushapMatchOverlay(
             matchName: _pendingMatch!.name,
+            matchPhoto: _networkImage(api.mediaUrl(_pendingMatch!.photos.isNotEmpty ? _pendingMatch!.photos.first : null)),
             onMessage: _openChatWithMatch,
             onKeepSwiping: _dismissMatch,
           ),

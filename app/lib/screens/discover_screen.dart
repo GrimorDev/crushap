@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import '../models/profile.dart';
+import '../services/api_client.dart';
 import '../theme/colors.dart';
 import '../theme/effects.dart';
 import '../theme/spacing.dart';
@@ -12,25 +13,28 @@ import '../widgets/navigation/bottom_nav.dart';
 
 enum _SwipeAction { pass, superlike, like }
 
-/// Ported from ui_kits/dating-app/DiscoverScreen.jsx.
-///
-/// The prototype only advanced cards via the pass/superlike/like buttons;
-/// this adds a matching drag-to-swipe gesture on the card itself (the
-/// component is literally named SwipeCard), a LIKE/NOPE/SUPER LIKE stamp
-/// that fades in as you drag, an undo (the `undo-2` icon was already part
-/// of the copied Lucide set but unused), and a reassuring end-of-deck state
-/// once you've been through the whole sample pool once. Superlike also
-/// opens the match overlay, since gold is the app's "premium/superlike"
-/// semantic.
+String _actionName(_SwipeAction a) => switch (a) {
+      _SwipeAction.pass => 'pass',
+      _SwipeAction.superlike => 'superlike',
+      _SwipeAction.like => 'like',
+    };
+
+/// Ported from ui_kits/dating-app/DiscoverScreen.jsx, now driven by the
+/// live `/api/discover` + `/api/swipes` endpoints instead of a static
+/// sample deck. Keeps the drag-to-swipe gesture, the LIKE/NOPE/SUPER LIKE
+/// stamp, and undo (now a real server-side undo — see
+/// server/src/store/swipes.js — not just a local rewind).
 class DiscoverScreen extends StatefulWidget {
   const DiscoverScreen({
     super.key,
+    required this.api,
     required this.onMatch,
     required this.onOpenFilters,
     required this.activeTab,
     required this.onTabChanged,
   });
 
+  final ApiClient api;
   final ValueChanged<Profile> onMatch;
   final VoidCallback onOpenFilters;
   final CrushapNavTab activeTab;
@@ -41,45 +45,97 @@ class DiscoverScreen extends StatefulWidget {
 }
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
+  List<Profile> _deck = [];
   int _idx = 0;
-  int _seenCount = 0;
-  bool _allSeen = false;
+  bool _loading = true;
+  String? _loadError;
+
+  Profile? _lastSwiped;
+  bool _lastMatched = false;
+
   Offset _drag = Offset.zero;
   Duration _animDuration = Duration.zero;
   VoidCallback? _pendingAfterAnim;
+  bool _busy = false;
 
-  Profile get _current => sampleProfiles[_idx % sampleProfiles.length];
-  bool get _canUndo => _idx > 0;
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
-  void _advance(bool matched) {
-    if (matched) widget.onMatch(_current);
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    try {
+      final profiles = await widget.api.discover();
+      setState(() {
+        _deck = profiles;
+        _idx = 0;
+        _loading = false;
+      });
+    } on ApiException catch (e) {
+      setState(() {
+        _loadError = e.message;
+        _loading = false;
+      });
+    } catch (_) {
+      setState(() {
+        _loadError = "Couldn't reach the server.";
+        _loading = false;
+      });
+    }
+  }
+
+  Profile? get _current => _idx < _deck.length ? _deck[_idx] : null;
+  bool get _canUndo => _lastSwiped != null && !_lastMatched;
+
+  Future<void> _advance(_SwipeAction action) async {
+    final target = _current;
+    if (target == null || _busy) return;
+    setState(() => _busy = true);
+    try {
+      final result = await widget.api.swipe(target.id, _actionName(action));
+      _lastSwiped = target;
+      _lastMatched = result.matched;
+      if (result.matched && result.profile != null) widget.onMatch(result.profile!);
+    } catch (_) {
+      // Network hiccup — still move on locally so the deck doesn't stall;
+      // the server is the source of truth for anyone re-fetching /discover.
+      _lastSwiped = target;
+      _lastMatched = false;
+    }
+    if (!mounted) return;
     setState(() {
       _idx++;
-      _seenCount++;
       _drag = Offset.zero;
       _animDuration = Duration.zero;
-      if (_seenCount >= sampleProfiles.length) _allSeen = true;
+      _busy = false;
     });
   }
 
-  void _undo() {
-    if (!_canUndo) return;
-    setState(() {
-      _idx--;
-      _seenCount = (_seenCount - 1).clamp(0, sampleProfiles.length);
-      _allSeen = false;
-      _drag = Offset.zero;
-      _animDuration = Duration.zero;
-    });
-  }
-
-  void _keepBrowsing() => setState(() {
-        _seenCount = 0;
-        _allSeen = false;
+  Future<void> _undo() async {
+    final target = _lastSwiped;
+    if (target == null || _lastMatched || _busy) return;
+    setState(() => _busy = true);
+    try {
+      await widget.api.undoSwipe(target.id);
+      setState(() {
+        // _idx stays put — the undone profile is reinserted right at it.
+        _deck.insert(_idx, target);
+        _lastSwiped = null;
       });
+    } catch (_) {
+      // Nothing to undo server-side (already matched from the other angle,
+      // etc.) — leave state as-is.
+    }
+    if (mounted) setState(() => _busy = false);
+  }
 
   void _fly(_SwipeAction action) {
-    final matched = action != _SwipeAction.pass;
+    if (_current == null || _busy) return;
     late final Offset target;
     switch (action) {
       case _SwipeAction.pass:
@@ -92,7 +148,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     setState(() {
       _animDuration = CrushapEffects.durSlow;
       _drag = target;
-      _pendingAfterAnim = () => _advance(matched);
+      _pendingAfterAnim = () => _advance(action);
     });
   }
 
@@ -164,11 +220,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ],
               ),
             ),
-            Expanded(
-              child: Center(
-                child: _allSeen ? _AllSeenCard(onKeepBrowsing: _keepBrowsing) : _buildCard(stamp),
-              ),
-            ),
+            Expanded(child: Center(child: _buildBody(stamp))),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 4, 0, 20),
               child: Row(
@@ -190,14 +242,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     label: 'Pass',
                     variant: CrushapIconButtonVariant.outline,
                     size: CrushapIconButtonSize.lg,
-                    onPressed: _allSeen ? null : () => _fly(_SwipeAction.pass),
+                    onPressed: _current == null ? null : () => _fly(_SwipeAction.pass),
                   ),
                   const SizedBox(width: 20),
                   CrushapIconButton(
                     icon: 'star',
                     label: 'Superlike',
                     variant: CrushapIconButtonVariant.surface,
-                    onPressed: _allSeen ? null : () => _fly(_SwipeAction.superlike),
+                    onPressed: _current == null ? null : () => _fly(_SwipeAction.superlike),
                   ),
                   const SizedBox(width: 20),
                   CrushapIconButton(
@@ -205,7 +257,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     label: 'Like',
                     variant: CrushapIconButtonVariant.filled,
                     size: CrushapIconButtonSize.lg,
-                    onPressed: _allSeen ? null : () => _fly(_SwipeAction.like),
+                    onPressed: _current == null ? null : () => _fly(_SwipeAction.like),
                   ),
                 ],
               ),
@@ -217,8 +269,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
+  Widget _buildBody(({String label, Color color, Alignment align})? stamp) {
+    if (_loading) {
+      return Text('Finding people nearby…', style: CrushapText.body.copyWith(color: CrushapColors.textSecondary));
+    }
+    if (_loadError != null) {
+      return _MessageCard(
+        icon: 'zap',
+        title: "Couldn't load Discover",
+        message: _loadError!,
+        actionLabel: 'Try again',
+        onAction: _load,
+      );
+    }
+    if (_current == null) {
+      return _MessageCard(
+        icon: 'sparkles',
+        title: "You're all caught up",
+        message: "That's everyone nearby for now. New people show up here as they join — check back soon.",
+        actionLabel: 'Refresh',
+        onAction: _load,
+      );
+    }
+    return _buildCard(stamp);
+  }
+
   Widget _buildCard(({String label, Color color, Alignment align})? stamp) {
     final angle = (_drag.dx / 300).clamp(-0.5, 0.5);
+    final current = _current!;
     return GestureDetector(
       onPanUpdate: _onPanUpdate,
       onPanEnd: _onPanEnd,
@@ -241,13 +319,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             clipBehavior: Clip.none,
             children: [
               CrushapSwipeCard(
-                key: ValueKey(_idx),
-                name: _current.name,
-                age: _current.age,
-                distance: _current.distance,
-                verified: _current.verified,
-                bio: _current.bio,
-                tags: _current.tags,
+                key: ValueKey('${current.id}-$_idx'),
+                name: current.name,
+                age: current.age,
+                distance: current.distanceLabel,
+                verified: current.verified,
+                bio: current.bio,
+                tags: current.tags,
+                photoUrl: widget.api.mediaUrl(current.photos.isNotEmpty ? current.photos.first : null),
                 width: 340,
                 height: 440,
               ),
@@ -302,10 +381,20 @@ class _Stamp extends StatelessWidget {
   }
 }
 
-class _AllSeenCard extends StatelessWidget {
-  const _AllSeenCard({required this.onKeepBrowsing});
+class _MessageCard extends StatelessWidget {
+  const _MessageCard({
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
 
-  final VoidCallback onKeepBrowsing;
+  final String icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -327,21 +416,17 @@ class _AllSeenCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const CrushapIcon('sparkles', size: 40, color: CrushapColors.accentSecondary),
+              CrushapIcon(icon, size: 40, color: CrushapColors.accentSecondary),
               const SizedBox(height: 16),
-              Text(
-                "You're all caught up",
-                textAlign: TextAlign.center,
-                style: CrushapText.title,
-              ),
+              Text(title, textAlign: TextAlign.center, style: CrushapText.title),
               const SizedBox(height: 10),
               Text(
-                "That's everyone nearby for now. Check back soon, or start again from the top.",
+                message,
                 textAlign: TextAlign.center,
                 style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
               ),
               const SizedBox(height: 24),
-              CrushapButton(label: 'Keep browsing', onPressed: onKeepBrowsing),
+              CrushapButton(label: actionLabel, onPressed: onAction),
             ],
           ),
         ),

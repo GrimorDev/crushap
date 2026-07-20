@@ -38,6 +38,13 @@ dependencies:
   # Renders the Lucide icon set copied into assets/icons (see readme.md Iconography).
   flutter_svg: ^2.0.10+1
 
+  # Backend integration: REST + WebSocket client, persisted server URL/token,
+  # and photo capture/picking for profile + swipe-card photos.
+  http: ^1.2.2
+  web_socket_channel: ^3.0.1
+  shared_preferences: ^2.3.2
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

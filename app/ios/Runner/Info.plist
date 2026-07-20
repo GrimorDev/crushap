@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Crushap uses your camera to let you add a photo to your profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Crushap uses your photo library to let you add a photo to your profile.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
