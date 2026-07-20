@@ -26,6 +26,7 @@ class CrushapText {
       fontWeight: weight,
       height: height,
       color: CrushapColors.textPrimary,
+      decoration: TextDecoration.none,
     );
   }
 
@@ -40,6 +41,7 @@ class CrushapText {
       fontWeight: weight,
       height: height,
       color: CrushapColors.textPrimary,
+      decoration: TextDecoration.none,
     );
   }
 
