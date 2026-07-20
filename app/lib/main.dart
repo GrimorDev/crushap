@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'l10n/gen/app_localizations.dart';
 import 'models/profile.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/chat_inbox_screen.dart';
@@ -20,43 +21,16 @@ void main() {
   runApp(const CrushapApp());
 }
 
-class CrushapApp extends StatelessWidget {
+ImageProvider? _networkImage(String? url) => url == null ? null : NetworkImage(url);
+
+class CrushapApp extends StatefulWidget {
   const CrushapApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'crushap',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: CrushapColors.surfaceApp,
-        primaryColor: CrushapColors.accentPrimary,
-        textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: CrushapColors.accentPrimary,
-          selectionColor: CrushapColors.accentGlow,
-          selectionHandleColor: CrushapColors.accentPrimary,
-        ),
-      ),
-      // No screen uses Scaffold (the design system's chrome is hand-rolled,
-      // not Material's), but a couple of leaf widgets (TextField) still
-      // require a Material ancestor to satisfy their internal assertions —
-      // one Material here covers the whole app instead of wrapping each.
-      home: const Material(color: CrushapColors.surfaceApp, child: _AppRoot()),
-    );
-  }
+  State<CrushapApp> createState() => _CrushapAppState();
 }
 
-ImageProvider? _networkImage(String? url) => url == null ? null : NetworkImage(url);
-
-class _AppRoot extends StatefulWidget {
-  const _AppRoot();
-
-  @override
-  State<_AppRoot> createState() => _AppRootState();
-}
-
-class _AppRootState extends State<_AppRoot> {
+class _CrushapAppState extends State<CrushapApp> {
   Session? _session;
   ApiClient? _api;
   bool _showLogin = false;
@@ -73,6 +47,8 @@ class _AppRootState extends State<_AppRoot> {
       });
     });
   }
+
+  void _onLocaleChanged() => setState(() {});
 
   void _onTabChanged(CrushapNavTab tab) => setState(() => _tab = tab);
 
@@ -122,6 +98,31 @@ class _AppRootState extends State<_AppRoot> {
 
   @override
   Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'crushap',
+      debugShowCheckedModeBanner: false,
+      locale: _session?.localeOverride,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: CrushapColors.surfaceApp,
+        primaryColor: CrushapColors.accentPrimary,
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: CrushapColors.accentPrimary,
+          selectionColor: CrushapColors.accentGlow,
+          selectionHandleColor: CrushapColors.accentPrimary,
+        ),
+      ),
+      // No screen uses Scaffold (the design system's chrome is hand-rolled,
+      // not Material's), but a couple of leaf widgets (TextField) still
+      // require a Material ancestor to satisfy their internal assertions —
+      // one Material here covers the whole app instead of wrapping each.
+      home: Material(color: CrushapColors.surfaceApp, child: _buildBody()),
+    );
+  }
+
+  Widget _buildBody() {
     final session = _session;
     final api = _api;
     if (session == null || api == null) {
@@ -161,11 +162,13 @@ class _AppRootState extends State<_AppRoot> {
           onTabChanged: _onTabChanged,
         ),
       CrushapNavTab.profile => ProfileScreen(
+          session: session,
           api: api,
           activeTab: _tab,
           onTabChanged: _onTabChanged,
           onOpenServerSettings: _openServerSettings,
           onLogout: _logout,
+          onLocaleChanged: _onLocaleChanged,
         ),
       CrushapNavTab.search => SearchScreen(api: api, activeTab: _tab, onTabChanged: _onTabChanged),
       CrushapNavTab.matches => MatchesScreen(

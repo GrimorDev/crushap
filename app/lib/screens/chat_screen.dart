@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show TextField, InputDecoration, InputBorder, TextInputAction;
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../models/chat_message.dart';
 import '../services/api_client.dart';
 import '../services/chat_socket.dart';
@@ -97,6 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final messages = _messages;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
@@ -112,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   CrushapIconButton(
                     icon: 'arrow-left',
-                    label: 'Back',
+                    label: t.backLabel,
                     variant: CrushapIconButtonVariant.ghost,
                     onPressed: widget.onBack,
                   ),
@@ -132,7 +134,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: messages == null
                   ? const SizedBox.shrink()
                   : messages.isEmpty
-                      ? _EmptyThread(matchName: widget.matchName)
+                      ? _EmptyThread(matchName: widget.matchName, t: t)
                       : ListView.separated(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(20),
@@ -185,7 +187,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         decoration: InputDecoration(
                           isDense: true,
                           border: InputBorder.none,
-                          hintText: 'Send a message',
+                          hintText: t.sendMessagePlaceholder,
                           hintStyle: CrushapText.body.copyWith(color: CrushapColors.textTertiary),
                         ),
                         onSubmitted: (_) => _send(),
@@ -196,7 +198,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: 10),
                   CrushapIconButton(
                     icon: 'send',
-                    label: 'Send',
+                    label: t.sendLabel,
                     variant: CrushapIconButtonVariant.filled,
                     onPressed: _send,
                   ),
@@ -211,8 +213,9 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.matchName});
+  const _EmptyThread({required this.matchName, required this.t});
   final String matchName;
+  final AppLocalizations t;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +228,7 @@ class _EmptyThread extends StatelessWidget {
             const CrushapIcon('message-circle', size: 32, color: CrushapColors.textTertiary),
             const SizedBox(height: 12),
             Text(
-              'You matched with $matchName. Say hi 👋',
+              t.matchedEmptyState(matchName),
               textAlign: TextAlign.center,
               style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
             ),

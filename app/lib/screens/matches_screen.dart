@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../theme/colors.dart';
@@ -51,6 +52,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final matches = _matches;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
@@ -60,7 +62,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: Center(child: Text('Matches', style: CrushapText.title)),
+              child: Center(child: Text(t.matchesTitle, style: CrushapText.title)),
             ),
             Expanded(
               child: matches == null
@@ -75,7 +77,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                                 const CrushapIcon('heart', size: 32, color: CrushapColors.textTertiary),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'Your matches will show up here. Get swiping on Discover.',
+                                  t.noMatchesYet,
                                   textAlign: TextAlign.center,
                                   style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
                                 ),

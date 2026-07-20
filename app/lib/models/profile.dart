@@ -22,7 +22,10 @@ class Profile {
   final List<String> tags;
   final List<String> photos;
 
-  String? get distanceLabel => distanceKm == null ? null : '${distanceKm!.toStringAsFixed(distanceKm! < 10 ? 1 : 0)} km away';
+  /// Formatted distance value only — the "X km away" phrasing is locale-
+  /// dependent, so that part is added at the UI layer (AppLocalizations).
+  String? get distanceValue =>
+      distanceKm?.toStringAsFixed(distanceKm! < 10 ? 1 : 0);
 
   factory Profile.fromJson(Map<String, dynamic> j) {
     return Profile(

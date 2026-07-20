@@ -99,11 +99,16 @@ class ApiClient {
   }
 
   Future<Profile> updateMe({String? name, String? bio, int? age, List<String>? tags}) async {
-    final res = await http.patch(
-      _uri('/api/me'),
-      headers: _headers(),
-      body: jsonEncode({'name': name, 'bio': bio, 'age': age, 'tags': tags}),
-    );
+    // Only send fields that actually changed — sending an explicit `null`
+    // for the rest would overwrite them server-side (PATCH is a partial
+    // update; a present-but-null key looks like "clear this field").
+    final fields = <String, dynamic>{
+      'name': ?name,
+      'bio': ?bio,
+      'age': ?age,
+      'tags': ?tags,
+    };
+    final res = await http.patch(_uri('/api/me'), headers: _headers(), body: jsonEncode(fields));
     final body = await _decode(res);
     return Profile.fromJson(body['user'] as Map<String, dynamic>);
   }

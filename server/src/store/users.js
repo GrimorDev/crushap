@@ -33,13 +33,17 @@ async function getUserRaw(id) {
 }
 
 async function updateUser(id, fields) {
+  // `!= null` (loose) catches both a missing key AND an explicit `null` —
+  // a client sending `{"name": null}` must not blank out the field (and,
+  // for `age`, would otherwise store the literal string "null", which
+  // then fails to parse back into an int and breaks the profile).
   const patch = {};
-  if (fields.name !== undefined) patch.name = fields.name;
-  if (fields.bio !== undefined) patch.bio = fields.bio;
-  if (fields.age !== undefined) patch.age = String(fields.age);
-  if (fields.tags !== undefined) patch.tags = JSON.stringify(fields.tags);
+  if (fields.name != null) patch.name = fields.name;
+  if (fields.bio != null) patch.bio = fields.bio;
+  if (fields.age != null) patch.age = String(fields.age);
+  if (fields.tags != null) patch.tags = JSON.stringify(fields.tags);
   if (Object.keys(patch).length) await redis.hset(userKey(id), patch);
-  if (fields.lat !== undefined && fields.lng !== undefined) {
+  if (fields.lat != null && fields.lng != null) {
     await redis.geoadd('geo:users', fields.lng, fields.lat, id);
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../services/api_client.dart';
 import '../services/session.dart';
 import '../theme/colors.dart';
@@ -31,9 +32,10 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
   }
 
   Future<void> _save() async {
+    final t = AppLocalizations.of(context)!;
     final url = _controller.text.trim();
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      setState(() => _error = 'Include http:// or https://');
+      setState(() => _error = t.serverSetupErrorFormat);
       return;
     }
     setState(() {
@@ -45,7 +47,7 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
       await widget.session.setServerUrl(url);
       if (mounted) widget.onSaved();
     } catch (e) {
-      setState(() => _error = "Couldn't reach that server. Double-check the address and that it's running.");
+      setState(() => _error = t.serverSetupErrorUnreachable);
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -53,6 +55,7 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -64,32 +67,31 @@ class _ServerSetupScreenState extends State<ServerSetupScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Connect to your server', style: CrushapText.title),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Enter the address of your Crushap server (see DEPLOYMENT.md) — "
-                      "something like http://203.0.113.5:3000.",
-                      style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
-                    ),
-                    const SizedBox(height: 20),
-                    CrushapInput(
-                      controller: _controller,
-                      placeholder: 'http://your-server-ip:3000',
-                      keyboardType: TextInputType.url,
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 10),
-                      Text(_error!, style: CrushapText.bodySm.copyWith(color: CrushapColors.actionPass)),
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t.serverSetupTitle, style: CrushapText.title),
+                      const SizedBox(height: 12),
+                      Text(
+                        t.serverSetupDescription,
+                        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+                      ),
+                      const SizedBox(height: 20),
+                      CrushapInput(
+                        controller: _controller,
+                        placeholder: t.serverSetupPlaceholder,
+                        keyboardType: TextInputType.url,
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 10),
+                        Text(_error!, style: CrushapText.bodySm.copyWith(color: CrushapColors.actionPass)),
+                      ],
                     ],
-                  ],
                   ),
                 ),
               ),
               CrushapButton(
-                label: _checking ? 'Checking…' : 'Continue',
+                label: _checking ? t.checkingLabel : t.continueLabel,
                 size: CrushapButtonSize.lg,
                 expand: true,
                 onPressed: _checking ? null : _save,

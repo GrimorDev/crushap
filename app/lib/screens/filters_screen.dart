@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/effects.dart';
 import '../theme/spacing.dart';
@@ -29,6 +30,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final genders = [t.genderWomen, t.genderMen, t.genderEveryone];
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -43,12 +46,12 @@ class _FiltersScreenState extends State<FiltersScreen> {
                 children: [
                   CrushapIconButton(
                     icon: 'arrow-left',
-                    label: 'Back',
+                    label: t.backLabel,
                     variant: CrushapIconButtonVariant.ghost,
                     onPressed: widget.onClose,
                   ),
                   const SizedBox(width: 12),
-                  Text('Filters', style: CrushapText.title),
+                  Text(t.filtersLabel, style: CrushapText.title),
                 ],
               ),
             ),
@@ -59,8 +62,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _FilterRow(
-                      label: 'Maximum distance',
-                      value: '${_distance.round()} km',
+                      label: t.maximumDistance,
+                      value: t.distanceValueKm(_distance.round()),
                       child: _CrushapSlider(
                         min: 1,
                         max: 100,
@@ -70,8 +73,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
                     ),
                     const SizedBox(height: 28),
                     _FilterRow(
-                      label: 'Age range',
-                      value: '18 - ${_maxAge.round()}',
+                      label: t.ageRange,
+                      value: t.ageRangeValue(_maxAge.round()),
                       child: _CrushapSlider(
                         min: 18,
                         max: 60,
@@ -80,11 +83,11 @@ class _FiltersScreenState extends State<FiltersScreen> {
                       ),
                     ),
                     const SizedBox(height: 28),
-                    Text('Show me', style: CrushapText.body),
+                    Text(t.showMe, style: CrushapText.body),
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        for (final (i, g) in const ['Women', 'Men', 'Everyone'].indexed) ...[
+                        for (final (i, g) in genders.indexed) ...[
                           if (i > 0) const SizedBox(width: 8),
                           CrushapChip(label: g, selected: i == _showMe, onTap: () => setState(() => _showMe = i)),
                         ],
@@ -98,7 +101,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           children: [
                             const CrushapIcon('shield-check', size: 18, color: CrushapColors.green1),
                             const SizedBox(width: 8),
-                            Text('Verified profiles only', style: CrushapText.body),
+                            Text(t.verifiedProfilesOnly, style: CrushapText.body),
                           ],
                         ),
                         _CrushapSwitch(
@@ -114,7 +117,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
             Padding(
               padding: const EdgeInsets.all(20),
               child: CrushapButton(
-                label: 'Apply filters',
+                label: t.applyFilters,
                 size: CrushapButtonSize.lg,
                 expand: true,
                 onPressed: widget.onClose,

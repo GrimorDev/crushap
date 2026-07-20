@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../theme/colors.dart';
@@ -49,6 +50,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final matches = _matches;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
@@ -58,7 +60,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: Center(child: Text('Chat', style: CrushapText.title)),
+              child: Center(child: Text(t.chatTitle, style: CrushapText.title)),
             ),
             Expanded(
               child: matches == null
@@ -73,7 +75,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                 const CrushapIcon('message-circle', size: 32, color: CrushapColors.textTertiary),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'No conversations yet. Match with someone on Discover to start chatting.',
+                                  t.noConversationsYet,
                                   textAlign: TextAlign.center,
                                   style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
                                 ),
@@ -91,7 +93,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                               final entry = matches[i];
                               final profile = entry.profile;
                               final photoUrl = widget.api.mediaUrl(profile.photos.isNotEmpty ? profile.photos.first : null);
-                              final preview = entry.lastMessageText ?? 'Say hi 👋';
+                              final preview = entry.lastMessageText ?? t.sayHiPreview;
                               return GestureDetector(
                                 behavior: HitTestBehavior.opaque,
                                 onTap: () => widget.onOpenThread(profile),

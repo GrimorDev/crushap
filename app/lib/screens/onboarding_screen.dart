@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/widgets.dart';
 import '../constants.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../services/api_client.dart';
 import '../services/session.dart';
 import '../theme/colors.dart';
@@ -9,6 +10,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/photo_source_sheet.dart';
 import '../widgets/forms/app_input.dart';
 
 /// Ported from ui_kits/dating-app/Onboarding.jsx — welcome -> name ->
@@ -57,7 +59,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1600, imageQuality: 85);
+    final source = await showPhotoSourceSheet(context);
+    if (source == null) return;
+    final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
     if (file == null) return;
     final bytes = await file.readAsBytes();
     setState(() {
@@ -87,10 +91,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
       if (mounted) widget.onDone();
     } on ApiException catch (e) {
-      setState(() => _step = 2); // back to the credentials step, where this is most likely to matter
-      setState(() => _error = e.message);
+      setState(() {
+        _step = 2; // back to the credentials step, where this is most likely to matter
+        _error = e.message;
+      });
     } catch (_) {
-      setState(() => _error = "Couldn't reach the server. Try again.");
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -156,7 +162,11 @@ class _BackRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: CrushapButton(label: '← Back', variant: CrushapButtonVariant.ghost, onPressed: onBack),
+      child: CrushapButton(
+        label: AppLocalizations.of(context)!.backWithArrow,
+        variant: CrushapButtonVariant.ghost,
+        onPressed: onBack,
+      ),
     );
   }
 }
@@ -169,6 +179,7 @@ class _WelcomeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -182,17 +193,17 @@ class _WelcomeStep extends StatelessWidget {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
                 child: Text(
-                  'Find your spark tonight. No games, just genuine matches.',
+                  t.onboardingHeadline,
                   style: CrushapText.bodyLg.copyWith(color: CrushapColors.textSecondary),
                 ),
               ),
             ],
           ),
         ),
-        CrushapButton(label: 'Get Started', size: CrushapButtonSize.lg, expand: true, onPressed: onGetStarted),
+        CrushapButton(label: t.getStarted, size: CrushapButtonSize.lg, expand: true, onPressed: onGetStarted),
         const SizedBox(height: 20),
         CrushapButton(
-          label: 'I already have an account',
+          label: t.alreadyHaveAccount,
           variant: CrushapButtonVariant.ghost,
           expand: true,
           onPressed: onLogin,
@@ -211,6 +222,7 @@ class _NameStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -221,9 +233,9 @@ class _NameStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text("What's your name?", style: CrushapText.title),
+                Text(t.nameStepTitle, style: CrushapText.title),
                 const SizedBox(height: 16),
-                CrushapInput(placeholder: 'First name', controller: controller),
+                CrushapInput(placeholder: t.firstNamePlaceholder, controller: controller),
               ],
             ),
           ),
@@ -231,7 +243,7 @@ class _NameStep extends StatelessWidget {
         ListenableBuilder(
           listenable: controller,
           builder: (context, _) => CrushapButton(
-            label: 'Continue',
+            label: t.continueLabel,
             size: CrushapButtonSize.lg,
             expand: true,
             onPressed: controller.text.trim().isEmpty ? null : onContinue,
@@ -259,6 +271,7 @@ class _CredentialsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -269,11 +282,11 @@ class _CredentialsStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Set up your login', style: CrushapText.title),
+                Text(t.credentialsStepTitle, style: CrushapText.title),
                 const SizedBox(height: 16),
-                CrushapInput(placeholder: 'Email', controller: emailController, keyboardType: TextInputType.emailAddress),
+                CrushapInput(placeholder: t.emailPlaceholder, controller: emailController, keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 12),
-                CrushapInput(placeholder: 'Password (min. 6 characters)', controller: passwordController, obscureText: true),
+                CrushapInput(placeholder: t.passwordMinPlaceholder, controller: passwordController, obscureText: true),
                 if (error != null) ...[
                   const SizedBox(height: 10),
                   Text(error!, style: CrushapText.bodySm.copyWith(color: CrushapColors.actionPass)),
@@ -285,7 +298,7 @@ class _CredentialsStep extends StatelessWidget {
         ListenableBuilder(
           listenable: Listenable.merge([emailController, passwordController]),
           builder: (context, _) => CrushapButton(
-            label: 'Continue',
+            label: t.continueLabel,
             size: CrushapButtonSize.lg,
             expand: true,
             onPressed: emailController.text.trim().contains('@') && passwordController.text.length >= 6
@@ -307,6 +320,7 @@ class _AgeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -317,9 +331,9 @@ class _AgeStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('How old are you?', style: CrushapText.title),
+                Text(t.ageStepTitle, style: CrushapText.title),
                 const SizedBox(height: 16),
-                CrushapInput(placeholder: 'Age', controller: controller, keyboardType: TextInputType.number),
+                CrushapInput(placeholder: t.agePlaceholder, controller: controller, keyboardType: TextInputType.number),
               ],
             ),
           ),
@@ -329,7 +343,7 @@ class _AgeStep extends StatelessWidget {
           builder: (context, _) {
             final age = int.tryParse(controller.text.trim());
             return CrushapButton(
-              label: 'Continue',
+              label: t.continueLabel,
               size: CrushapButtonSize.lg,
               expand: true,
               onPressed: (age != null && age >= 18 && age <= 100) ? onContinue : null,
@@ -356,6 +370,7 @@ class _InterestsStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -366,14 +381,18 @@ class _InterestsStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Pick a few interests', style: CrushapText.title),
+                Text(t.interestsStepTitle, style: CrushapText.title),
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    for (final t in kInterestOptions)
-                      CrushapChip(label: t, selected: selected.contains(t), onTap: () => onToggle(t)),
+                    // Interest values stay in English as canonical data (they're
+                    // also used for tag matching in search) — only the chrome
+                    // around them is localized. See DEPLOYMENT.md/README for
+                    // this trade-off if it ever needs revisiting.
+                    for (final tag in kInterestOptions)
+                      CrushapChip(label: tag, selected: selected.contains(tag), onTap: () => onToggle(tag)),
                   ],
                 ),
               ],
@@ -381,7 +400,7 @@ class _InterestsStep extends StatelessWidget {
           ),
         ),
         CrushapButton(
-          label: 'Continue',
+          label: t.continueLabel,
           size: CrushapButtonSize.lg,
           expand: true,
           onPressed: selected.isEmpty ? null : onContinue,
@@ -408,6 +427,7 @@ class _PhotoStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     final bytes = photoBytes;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -417,10 +437,10 @@ class _PhotoStep extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Add a photo', style: CrushapText.title),
+              Text(t.photoStepTitle, style: CrushapText.title),
               const SizedBox(height: 8),
               Text(
-                'Optional, but profiles with a real photo get a lot more matches.',
+                t.photoStepSubtitle,
                 textAlign: TextAlign.center,
                 style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
               ),
@@ -446,7 +466,7 @@ class _PhotoStep extends StatelessWidget {
           ),
         ),
         CrushapButton(
-          label: busy ? 'Setting up your account…' : (bytes == null ? 'Skip for now' : 'Start swiping'),
+          label: busy ? t.settingUpAccount : (bytes == null ? t.skipForNow : t.startSwiping),
           variant: bytes == null ? CrushapButtonVariant.ghost : CrushapButtonVariant.primary,
           size: CrushapButtonSize.lg,
           expand: true,

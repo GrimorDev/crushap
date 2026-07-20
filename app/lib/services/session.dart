@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persisted "which server, which logged-in user" state. The server's
@@ -12,6 +13,7 @@ class Session {
   static const _kServerUrl = 'server_url';
   static const _kToken = 'auth_token';
   static const _kUserId = 'user_id';
+  static const _kLocale = 'locale_override';
 
   static Future<Session> load() async {
     return Session._(await SharedPreferences.getInstance());
@@ -48,5 +50,20 @@ class Session {
   Future<void> clearAuth() async {
     await _prefs.remove(_kToken);
     await _prefs.remove(_kUserId);
+  }
+
+  /// null means "follow the device's language" (falling back to English
+  /// if the device language isn't one of ours — see supportedLocales).
+  Locale? get localeOverride {
+    final code = _prefs.getString(_kLocale);
+    return code == null ? null : Locale(code);
+  }
+
+  Future<void> setLocaleOverride(Locale? locale) async {
+    if (locale == null) {
+      await _prefs.remove(_kLocale);
+    } else {
+      await _prefs.setString(_kLocale, locale.languageCode);
+    }
   }
 }

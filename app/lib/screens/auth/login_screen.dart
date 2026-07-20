@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../../l10n/gen/app_localizations.dart';
 import '../../services/api_client.dart';
 import '../../services/session.dart';
 import '../../theme/colors.dart';
@@ -45,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on ApiException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
-      setState(() => _error = "Couldn't reach the server. Try again.");
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -53,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -61,17 +63,17 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CrushapButton(label: '← Back', variant: CrushapButtonVariant.ghost, onPressed: widget.onBack),
+              CrushapButton(label: t.backWithArrow, variant: CrushapButtonVariant.ghost, onPressed: widget.onBack),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Welcome back', style: CrushapText.title),
+                    Text(t.welcomeBack, style: CrushapText.title),
                     const SizedBox(height: 20),
-                    CrushapInput(placeholder: 'Email', controller: _email, keyboardType: TextInputType.emailAddress),
+                    CrushapInput(placeholder: t.emailPlaceholder, controller: _email, keyboardType: TextInputType.emailAddress),
                     const SizedBox(height: 12),
-                    CrushapInput(placeholder: 'Password', controller: _password, obscureText: true),
+                    CrushapInput(placeholder: t.passwordPlaceholder, controller: _password, obscureText: true),
                     if (_error != null) ...[
                       const SizedBox(height: 10),
                       Text(_error!, style: CrushapText.bodySm.copyWith(color: CrushapColors.actionPass)),
@@ -80,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               CrushapButton(
-                label: _busy ? 'Logging in…' : 'Log in',
+                label: _busy ? t.loggingIn : t.logIn,
                 size: CrushapButtonSize.lg,
                 expand: true,
                 onPressed: _busy ? null : _submit,

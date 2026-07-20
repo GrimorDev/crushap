@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
+import '../../l10n/gen/app_localizations.dart';
 import '../../theme/colors.dart';
 import '../../theme/effects.dart';
 import '../../theme/typography.dart';
@@ -25,6 +26,7 @@ class CrushapMatchOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return Positioned.fill(
       child: ClipRect(
         child: BackdropFilter(
@@ -42,7 +44,7 @@ class CrushapMatchOverlay extends StatelessWidget {
                 ShaderMask(
                   shaderCallback: (bounds) => CrushapColors.gradientPrimary.createShader(bounds),
                   child: Text(
-                    "It's a match!",
+                    t.itsAMatch,
                     textAlign: TextAlign.center,
                     style: CrushapText.displayXl.copyWith(
                       color: const Color(0xFFFFFFFF),
@@ -54,7 +56,7 @@ class CrushapMatchOverlay extends StatelessWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 280),
                   child: Text(
-                    'You and $matchName liked each other.',
+                    t.matchedWithMessage(matchName),
                     textAlign: TextAlign.center,
                     style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
                   ),
@@ -96,14 +98,14 @@ class CrushapMatchOverlay extends StatelessWidget {
                   child: Column(
                     children: [
                       CrushapButton(
-                        label: 'Send a Message',
+                        label: t.sendAMessage,
                         size: CrushapButtonSize.lg,
                         expand: true,
                         onPressed: onMessage,
                       ),
                       const SizedBox(height: 12),
                       CrushapButton(
-                        label: 'Keep Swiping',
+                        label: t.keepSwiping,
                         variant: CrushapButtonVariant.ghost,
                         expand: true,
                         onPressed: onKeepSwiping,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../theme/colors.dart';
@@ -61,6 +62,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -70,7 +72,7 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: CrushapInput(
                 controller: _controller,
-                placeholder: 'Search by name or interest',
+                placeholder: t.searchPlaceholder,
                 icon: const CrushapIcon('search', size: 18, color: CrushapColors.textTertiary),
                 onChanged: _onChanged,
               ),
@@ -81,7 +83,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   : _results.isEmpty
                       ? Center(
                           child: Text(
-                            'No one matches that yet.',
+                            t.noSearchResults,
                             style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
                           ),
                         )
@@ -110,9 +112,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                         Row(
                                           children: [
                                             Text('${p.name}, ${p.age}', style: CrushapText.body.copyWith(fontWeight: FontWeight.w600)),
-                                            if (p.distanceLabel != null) ...[
+                                            if (p.distanceValue != null) ...[
                                               const SizedBox(width: 6),
-                                              Text(p.distanceLabel!, style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary)),
+                                              Text(t.distanceAwayKm(p.distanceValue!), style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary)),
                                             ],
                                           ],
                                         ),

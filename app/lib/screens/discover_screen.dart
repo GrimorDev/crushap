@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../theme/colors.dart';
@@ -82,8 +83,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         _loading = false;
       });
     } catch (_) {
+      if (!mounted) return;
       setState(() {
-        _loadError = "Couldn't reach the server.";
+        _loadError = AppLocalizations.of(context)!.genericNetworkError;
         _loading = false;
       });
     }
@@ -173,16 +175,16 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
   }
 
-  ({String label, Color color, Alignment align})? get _stamp {
+  ({String label, Color color, Alignment align})? _stamp(AppLocalizations t) {
     const start = 36.0;
     if (_drag.dy < -start && _drag.dy.abs() > _drag.dx.abs()) {
-      return (label: 'SUPER LIKE', color: CrushapColors.actionSuperlike, align: Alignment.topCenter);
+      return (label: t.stampSuperlike, color: CrushapColors.actionSuperlike, align: Alignment.topCenter);
     }
     if (_drag.dx > start) {
-      return (label: 'LIKE', color: CrushapColors.actionLike, align: Alignment.topRight);
+      return (label: t.stampLike, color: CrushapColors.actionLike, align: Alignment.topRight);
     }
     if (_drag.dx < -start) {
-      return (label: 'NOPE', color: CrushapColors.actionPass, align: Alignment.topLeft);
+      return (label: t.stampNope, color: CrushapColors.actionPass, align: Alignment.topLeft);
     }
     return null;
   }
@@ -194,7 +196,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final stamp = _stamp;
+    final t = AppLocalizations.of(context)!;
+    final stamp = _stamp(t);
     return ColoredBox(
       color: CrushapColors.surfaceApp,
       child: SafeArea(
@@ -206,12 +209,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  Text('Discover', style: CrushapText.title),
+                  Text(t.discoverTitle, style: CrushapText.title),
                   Positioned(
                     right: 8,
                     child: CrushapIconButton(
                       icon: 'sliders-horizontal',
-                      label: 'Filters',
+                      label: t.filtersLabel,
                       size: CrushapIconButtonSize.sm,
                       variant: CrushapIconButtonVariant.ghost,
                       onPressed: widget.onOpenFilters,
@@ -220,7 +223,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ],
               ),
             ),
-            Expanded(child: Center(child: _buildBody(stamp))),
+            Expanded(child: Center(child: _buildBody(t, stamp))),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 4, 0, 20),
               child: Row(
@@ -230,7 +233,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     opacity: _canUndo ? 1 : 0.4,
                     child: CrushapIconButton(
                       icon: 'undo-2',
-                      label: 'Undo',
+                      label: t.undoLabel,
                       variant: CrushapIconButtonVariant.ghost,
                       size: CrushapIconButtonSize.sm,
                       onPressed: _canUndo ? _undo : null,
@@ -239,7 +242,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   const SizedBox(width: 14),
                   CrushapIconButton(
                     icon: 'x',
-                    label: 'Pass',
+                    label: t.passLabel,
                     variant: CrushapIconButtonVariant.outline,
                     size: CrushapIconButtonSize.lg,
                     onPressed: _current == null ? null : () => _fly(_SwipeAction.pass),
@@ -247,14 +250,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   const SizedBox(width: 20),
                   CrushapIconButton(
                     icon: 'star',
-                    label: 'Superlike',
+                    label: t.superlikeLabel,
                     variant: CrushapIconButtonVariant.surface,
                     onPressed: _current == null ? null : () => _fly(_SwipeAction.superlike),
                   ),
                   const SizedBox(width: 20),
                   CrushapIconButton(
                     icon: 'heart',
-                    label: 'Like',
+                    label: t.likeLabel,
                     variant: CrushapIconButtonVariant.filled,
                     size: CrushapIconButtonSize.lg,
                     onPressed: _current == null ? null : () => _fly(_SwipeAction.like),
@@ -269,32 +272,32 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     );
   }
 
-  Widget _buildBody(({String label, Color color, Alignment align})? stamp) {
+  Widget _buildBody(AppLocalizations t, ({String label, Color color, Alignment align})? stamp) {
     if (_loading) {
-      return Text('Finding people nearby…', style: CrushapText.body.copyWith(color: CrushapColors.textSecondary));
+      return Text(t.findingPeopleNearby, style: CrushapText.body.copyWith(color: CrushapColors.textSecondary));
     }
     if (_loadError != null) {
       return _MessageCard(
         icon: 'zap',
-        title: "Couldn't load Discover",
+        title: t.discoverLoadErrorTitle,
         message: _loadError!,
-        actionLabel: 'Try again',
+        actionLabel: t.tryAgain,
         onAction: _load,
       );
     }
     if (_current == null) {
       return _MessageCard(
         icon: 'sparkles',
-        title: "You're all caught up",
-        message: "That's everyone nearby for now. New people show up here as they join — check back soon.",
-        actionLabel: 'Refresh',
+        title: t.allCaughtUpTitle,
+        message: t.allCaughtUpMessage,
+        actionLabel: t.refresh,
         onAction: _load,
       );
     }
-    return _buildCard(stamp);
+    return _buildCard(t, stamp);
   }
 
-  Widget _buildCard(({String label, Color color, Alignment align})? stamp) {
+  Widget _buildCard(AppLocalizations t, ({String label, Color color, Alignment align})? stamp) {
     final angle = (_drag.dx / 300).clamp(-0.5, 0.5);
     final current = _current!;
     return GestureDetector(
@@ -322,7 +325,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 key: ValueKey('${current.id}-$_idx'),
                 name: current.name,
                 age: current.age,
-                distance: current.distanceLabel,
+                distance: current.distanceValue == null ? null : t.distanceAwayKm(current.distanceValue!),
                 verified: current.verified,
                 bio: current.bio,
                 tags: current.tags,
