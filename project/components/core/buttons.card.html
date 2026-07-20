@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Buttons & Icon Buttons" subtitle="Primary/secondary/ghost, sizes, icon buttons" -->
+<!DOCTYPE html><html><head><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{background:var(--surface-app);margin:0;padding:20px;font-family:var(--font-body)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Button, IconButton } = window.CrushapDesignSystem_d1bbc4;
+function Demo(){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+      <div style={{display:'flex',gap:12,alignItems:'center'}}>
+        <Button variant="primary">Get Started</Button>
+        <Button variant="secondary">Not now</Button>
+        <Button variant="ghost">Skip</Button>
+        <Button variant="primary" disabled>Disabled</Button>
+      </div>
+      <div style={{display:'flex',gap:12,alignItems:'center'}}>
+        <Button variant="primary" size="sm">Small</Button>
+        <Button variant="primary" size="md">Medium</Button>
+        <Button variant="primary" size="lg">Large</Button>
+      </div>
+      <div style={{display:'flex',gap:12,alignItems:'center'}}>
+        <IconButton icon="x" variant="outline" label="Pass" />
+        <IconButton icon="heart" variant="filled" label="Like" size="lg" />
+        <IconButton icon="star" variant="surface" label="Superlike" />
+        <IconButton icon="settings" variant="ghost" label="Settings" />
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

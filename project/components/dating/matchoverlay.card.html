@@ -1,0 +1,19 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Match Overlay" subtitle="'It's a match' celebration screen" -->
+<!DOCTYPE html><html><head><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{background:var(--surface-app);margin:0;font-family:var(--font-body)}</style>
+</head><body><div id="root" style={{position:'relative'}}></div>
+<script type="text/babel">
+const { MatchOverlay } = window.CrushapDesignSystem_d1bbc4;
+function Demo(){
+  return (
+    <div style={{position:'relative',width:700,height:420}}>
+      <MatchOverlay matchName="Mia" onMessage={()=>{}} onKeepSwiping={()=>{}} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script></body></html>

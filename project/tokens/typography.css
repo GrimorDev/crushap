@@ -1,0 +1,14 @@
+:root{
+--fs-xs:12px;--fs-sm:14px;--fs-md:16px;--fs-lg:18px;--fs-xl:22px;--fs-2xl:28px;--fs-3xl:36px;--fs-4xl:48px;
+--fw-regular:400;/* @kind other */--fw-medium:500;/* @kind other */--fw-semibold:600;/* @kind other */--fw-bold:700;/* @kind other */
+--lh-tight:1.08;/* @kind other */--lh-snug:1.25;/* @kind other */--lh-normal:1.45;/* @kind other */--lh-relaxed:1.65;/* @kind other */
+--tracking-tight:-.02em;/* @kind other */--tracking-normal:0em;/* @kind other */--tracking-wide:.04em;/* @kind other */
+--text-display-xl:var(--fw-bold) var(--fs-4xl)/var(--lh-tight) var(--font-display);
+--text-display-lg:var(--fw-bold) var(--fs-3xl)/var(--lh-tight) var(--font-display);
+--text-display-md:var(--fw-semibold) var(--fs-2xl)/var(--lh-snug) var(--font-display);
+--text-title:var(--fw-semibold) var(--fs-xl)/var(--lh-snug) var(--font-display);
+--text-body-lg:var(--fw-regular) var(--fs-lg)/var(--lh-normal) var(--font-body);
+--text-body:var(--fw-regular) var(--fs-md)/var(--lh-normal) var(--font-body);
+--text-body-sm:var(--fw-medium) var(--fs-sm)/var(--lh-normal) var(--font-body);
+--text-caption:var(--fw-semibold) var(--fs-xs)/var(--lh-normal) var(--font-body);
+}
