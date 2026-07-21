@@ -1,9 +1,25 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../models/chat_message.dart';
 import '../models/profile.dart';
 import 'session.dart';
+
+/// Picked images don't reliably carry a filename with a real extension
+/// (camera captures in particular often come back as a bare temp name), and
+/// MultipartFile.fromBytes falls back to application/octet-stream when it
+/// can't guess one — which the server's multer fileFilter silently rejects,
+/// producing a "No image file" error with no obvious cause. Naming the
+/// content type explicitly avoids relying on that guess.
+MediaType _imageMediaType(String filename) {
+  final lower = filename.toLowerCase();
+  if (lower.endsWith('.png')) return MediaType('image', 'png');
+  if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+  if (lower.endsWith('.heic')) return MediaType('image', 'heic');
+  if (lower.endsWith('.gif')) return MediaType('image', 'gif');
+  return MediaType('image', 'jpeg');
+}
 
 class ApiException implements Exception {
   ApiException(this.message);
@@ -119,7 +135,12 @@ class ApiClient {
   Future<String> uploadPhoto(Uint8List bytes, String filename) async {
     final req = http.MultipartRequest('POST', _uri('/api/me/photos'));
     req.headers.addAll(_headers(json: false));
-    req.files.add(http.MultipartFile.fromBytes('photo', bytes, filename: filename));
+    req.files.add(http.MultipartFile.fromBytes(
+      'photo',
+      bytes,
+      filename: filename,
+      contentType: _imageMediaType(filename),
+    ));
     final streamed = await req.send();
     final res = await http.Response.fromStream(streamed);
     final body = await _decode(res);

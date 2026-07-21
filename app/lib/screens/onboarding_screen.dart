@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/widgets.dart';
@@ -6,6 +7,8 @@ import '../l10n/gen/app_localizations.dart';
 import '../services/api_client.dart';
 import '../services/session.dart';
 import '../theme/colors.dart';
+import '../theme/effects.dart';
+import '../theme/spacing.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
@@ -85,21 +88,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         tags: _interests.toList(),
       );
       await widget.session.setAuth(token: token, userId: me.id);
-      final bytes = _photoBytes;
-      if (bytes != null) {
-        await api.uploadPhoto(bytes, _photoName ?? 'photo.jpg');
-      }
-      if (mounted) widget.onDone();
     } on ApiException catch (e) {
-      setState(() {
-        _step = 2; // back to the credentials step, where this is most likely to matter
-        _error = e.message;
-      });
+      if (mounted) {
+        setState(() {
+          _step = 2; // back to the credentials step, where this is most likely to matter
+          _error = e.message;
+          _submitting = false;
+        });
+      }
+      return;
     } catch (_) {
-      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        setState(() {
+          _error = AppLocalizations.of(context)!.genericNetworkError;
+          _submitting = false;
+        });
+      }
+      return;
     }
+
+    // The account now exists and is signed in — the photo is a nice-to-have
+    // from here on, so its failure must not strand the user back on the
+    // credentials step (retrying registration there would just fail with
+    // "email already exists", since the account was already created above).
+    final bytes = _photoBytes;
+    if (bytes != null) {
+      try {
+        await api.uploadPhoto(bytes, _photoName ?? 'photo.jpg');
+      } catch (_) {
+        // Ignore — the user can add a photo later from the profile screen.
+      }
+    }
+    if (mounted) widget.onDone();
   }
 
   @override
@@ -171,42 +191,160 @@ class _BackRow extends StatelessWidget {
   }
 }
 
-class _WelcomeStep extends StatelessWidget {
+class _WelcomeSlideData {
+  const _WelcomeSlideData({required this.icon, required this.title, required this.body});
+  final String icon;
+  final String title;
+  final String body;
+}
+
+/// An animated multi-slide intro (auto-advancing PageView + a pulsing
+/// glow behind each slide's icon) in place of a single static screen —
+/// the first thing a new user sees, so it carries the "premium" first
+/// impression the rest of the design system goes for.
+class _WelcomeStep extends StatefulWidget {
   const _WelcomeStep({required this.onGetStarted, required this.onLogin});
 
   final VoidCallback onGetStarted;
   final VoidCallback onLogin;
 
   @override
+  State<_WelcomeStep> createState() => _WelcomeStepState();
+}
+
+class _WelcomeStepState extends State<_WelcomeStep> {
+  final _pageController = PageController();
+  Timer? _autoAdvance;
+  int _page = 0;
+
+  void _scheduleAutoAdvance(int slideCount) {
+    _autoAdvance?.cancel();
+    _autoAdvance = Timer(const Duration(seconds: 4), () {
+      if (!mounted || !_pageController.hasClients) return;
+      _pageController.animateToPage(
+        (_page + 1) % slideCount,
+        duration: CrushapEffects.durSlow,
+        curve: CrushapEffects.easeStandard,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoAdvance?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final slides = [
+      _WelcomeSlideData(icon: 'flame', title: 'crushap', body: t.onboardingHeadline),
+      _WelcomeSlideData(icon: 'heart', title: t.onboardingSlide2Title, body: t.onboardingSlide2Body),
+      _WelcomeSlideData(icon: 'message-circle', title: t.onboardingSlide3Title, body: t.onboardingSlide3Body),
+    ];
+    _scheduleAutoAdvance(slides.length);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('crushap', style: CrushapText.displayXl),
-              const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 280),
-                child: Text(
-                  t.onboardingHeadline,
-                  style: CrushapText.bodyLg.copyWith(color: CrushapColors.textSecondary),
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _page = i),
+            children: [for (final s in slides) _WelcomeSlide(data: s)],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (final (i, _) in slides.indexed) ...[
+              if (i > 0) const SizedBox(width: 6),
+              AnimatedContainer(
+                duration: CrushapEffects.durNormal,
+                curve: CrushapEffects.easeStandard,
+                width: i == _page ? 22 : 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: i == _page ? CrushapColors.accentPrimary : CrushapColors.borderStrong,
+                  borderRadius: BorderRadius.circular(CrushapRadii.pill),
                 ),
               ),
             ],
-          ),
+          ],
         ),
-        CrushapButton(label: t.getStarted, size: CrushapButtonSize.lg, expand: true, onPressed: onGetStarted),
+        const SizedBox(height: 28),
+        CrushapButton(label: t.getStarted, size: CrushapButtonSize.lg, expand: true, onPressed: widget.onGetStarted),
         const SizedBox(height: 20),
         CrushapButton(
           label: t.alreadyHaveAccount,
           variant: CrushapButtonVariant.ghost,
           expand: true,
-          onPressed: onLogin,
+          onPressed: widget.onLogin,
+        ),
+      ],
+    );
+  }
+}
+
+class _WelcomeSlide extends StatefulWidget {
+  const _WelcomeSlide({required this.data});
+  final _WelcomeSlideData data;
+
+  @override
+  State<_WelcomeSlide> createState() => _WelcomeSlideState();
+}
+
+class _WelcomeSlideState extends State<_WelcomeSlide> with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(vsync: this, duration: const Duration(seconds: 2))
+    ..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedBuilder(
+          animation: _pulse,
+          builder: (context, child) {
+            final t = Curves.easeInOut.transform(_pulse.value);
+            return Transform.scale(
+              scale: 1 + t * 0.06,
+              child: Container(
+                width: 96,
+                height: 96,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: CrushapColors.gradientPrimary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: CrushapColors.accentGlow, blurRadius: 24 + t * 24, spreadRadius: t * 4),
+                  ],
+                ),
+                child: child,
+              ),
+            );
+          },
+          child: CrushapIcon(widget.data.icon, size: 40, color: CrushapColors.textPrimary),
+        ),
+        const SizedBox(height: 28),
+        Text(widget.data.title, style: CrushapText.displayXl),
+        const SizedBox(height: 12),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 280),
+          child: Text(
+            widget.data.body,
+            style: CrushapText.bodyLg.copyWith(color: CrushapColors.textSecondary),
+          ),
         ),
       ],
     );

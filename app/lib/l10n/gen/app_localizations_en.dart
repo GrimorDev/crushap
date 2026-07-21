@@ -36,6 +36,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Find your spark tonight. No games, just genuine matches.';
 
   @override
+  String get onboardingSlide2Title => 'Swipe. Match. Connect.';
+
+  @override
+  String get onboardingSlide2Body =>
+      'A quick swipe is all it takes — like who catches your eye, we\'ll tell you the moment it\'s mutual.';
+
+  @override
+  String get onboardingSlide3Title => 'Chat instantly';
+
+  @override
+  String get onboardingSlide3Body =>
+      'Once you match, the conversation starts right away — real-time messages, no waiting around.';
+
+  @override
   String get getStarted => 'Get Started';
 
   @override
@@ -300,4 +314,101 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get keepSwiping => 'Keep Swiping';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsNewMatches => 'New matches';
+
+  @override
+  String get notificationsNewMatchesDesc =>
+      'Get notified the moment someone matches with you.';
+
+  @override
+  String get notificationsNewMessages => 'New messages';
+
+  @override
+  String get notificationsNewMessagesDesc =>
+      'Get notified when a match sends you a message.';
+
+  @override
+  String get notificationsLikes => 'Likes';
+
+  @override
+  String get notificationsLikesDesc =>
+      'Get notified when someone likes your profile.';
+
+  @override
+  String get notificationsAppUpdates => 'App updates';
+
+  @override
+  String get notificationsAppUpdatesDesc =>
+      'News about new features and improvements.';
+
+  @override
+  String get privacyTitle => 'Privacy & safety';
+
+  @override
+  String get privacyShowDistance => 'Show my distance';
+
+  @override
+  String get privacyShowDistanceDesc =>
+      'Let other people see how far away you are.';
+
+  @override
+  String get privacyShowOnlineStatus => 'Show online status';
+
+  @override
+  String get privacyShowOnlineStatusDesc =>
+      'Let your matches see when you\'re active.';
+
+  @override
+  String get privacyReadReceipts => 'Read receipts';
+
+  @override
+  String get privacyReadReceiptsDesc =>
+      'Let matches see when you\'ve read their messages.';
+
+  @override
+  String get privacyBlockedSection => 'Blocked accounts';
+
+  @override
+  String get privacyNoBlockedUsers => 'You haven\'t blocked anyone.';
+
+  @override
+  String get subscriptionTitle => 'Subscription';
+
+  @override
+  String get subscriptionHeadline => 'Crushap Plus';
+
+  @override
+  String get subscriptionSubtitle =>
+      'Unlock the full experience and get noticed faster.';
+
+  @override
+  String get subscriptionFeatureUnlimitedLikes => 'Unlimited likes';
+
+  @override
+  String get subscriptionFeatureSeeWhoLikesYou => 'See who likes you';
+
+  @override
+  String get subscriptionFeatureRewind => 'Rewind your last swipe';
+
+  @override
+  String get subscriptionFeatureBoost => 'Monthly profile boost';
+
+  @override
+  String get subscriptionPrice => '\$9.99 / month';
+
+  @override
+  String get subscriptionCta => 'Notify me when it\'s ready';
+
+  @override
+  String get subscriptionComingSoon =>
+      'Crushap Plus is in the works — this screen shows what\'s coming, but nothing will be charged today.';
+
+  @override
+  String get subscriptionNotifyConfirmed =>
+      'You\'re on the list — we\'ll let you know.';
 }

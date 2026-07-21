@@ -66,4 +66,11 @@ class Session {
       await _prefs.setString(_kLocale, locale.languageCode);
     }
   }
+
+  /// Generic on/off settings (notification + privacy toggles) — these are
+  /// device-local preferences only, not synced to the server, so a flat
+  /// namespaced bool store is enough; no need for a dedicated field per key.
+  bool getFlag(String key, {bool defaultValue = true}) => _prefs.getBool('flag_$key') ?? defaultValue;
+
+  Future<void> setFlag(String key, bool value) => _prefs.setBool('flag_$key', value);
 }

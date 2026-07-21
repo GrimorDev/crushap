@@ -29,6 +29,9 @@ class ProfileScreen extends StatefulWidget {
     required this.activeTab,
     required this.onTabChanged,
     required this.onOpenServerSettings,
+    required this.onOpenNotifications,
+    required this.onOpenPrivacy,
+    required this.onOpenSubscription,
     required this.onLogout,
     required this.onLocaleChanged,
   });
@@ -38,6 +41,9 @@ class ProfileScreen extends StatefulWidget {
   final CrushapNavTab activeTab;
   final ValueChanged<CrushapNavTab> onTabChanged;
   final VoidCallback onOpenServerSettings;
+  final VoidCallback onOpenNotifications;
+  final VoidCallback onOpenPrivacy;
+  final VoidCallback onOpenSubscription;
   final VoidCallback onLogout;
   final VoidCallback onLocaleChanged;
 
@@ -192,9 +198,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           if (_editing) ..._buildEditor(t) else ..._buildReadonly(me, t),
                           const SizedBox(height: 24),
                           _SettingsRow(label: t.editProfileRow, onTap: _editing ? null : _startEditing),
-                          _SettingsRow(label: t.notificationsRow, onTap: null),
-                          _SettingsRow(label: t.privacySafetyRow, onTap: null),
-                          _SettingsRow(label: t.subscriptionRow, onTap: null),
+                          _SettingsRow(label: t.notificationsRow, onTap: widget.onOpenNotifications),
+                          _SettingsRow(label: t.privacySafetyRow, onTap: widget.onOpenPrivacy),
+                          _SettingsRow(label: t.subscriptionRow, onTap: widget.onOpenSubscription),
                           _SettingsRow(label: t.languageRow, onTap: _pickLanguage),
                           _SettingsRow(label: t.serverRow, onTap: widget.onOpenServerSettings),
                           _SettingsRow(label: t.logOutRow, isLast: true, onTap: widget.onLogout),

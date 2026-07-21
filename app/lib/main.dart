@@ -11,6 +11,9 @@ import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/server_setup_screen.dart';
+import 'screens/settings/notifications_screen.dart';
+import 'screens/settings/privacy_screen.dart';
+import 'screens/settings/subscription_screen.dart';
 import 'services/api_client.dart';
 import 'services/session.dart';
 import 'theme/colors.dart';
@@ -36,6 +39,13 @@ class _CrushapAppState extends State<CrushapApp> {
   bool _showLogin = false;
   CrushapNavTab _tab = CrushapNavTab.discover;
   Profile? _pendingMatch;
+
+  // This State's own `context` sits ABOVE the MaterialApp it builds (and
+  // therefore above the Navigator MaterialApp creates around `home`), so
+  // calling Navigator.of(context) from here throws "does not include a
+  // Navigator". A navigatorKey gives every push/pop callback below a
+  // handle straight into that Navigator instead.
+  final _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -63,7 +73,7 @@ class _CrushapAppState extends State<CrushapApp> {
   }
 
   void _openThread(Profile profile) {
-    Navigator.of(context).push(
+    _navigatorKey.currentState!.push(
       MaterialPageRoute(
         builder: (_) => ChatScreen(
           session: _session!,
@@ -71,23 +81,45 @@ class _CrushapAppState extends State<CrushapApp> {
           matchId: profile.id,
           matchName: profile.name,
           matchPhotoUrl: _api!.mediaUrl(profile.photos.isNotEmpty ? profile.photos.first : null),
-          onBack: () => Navigator.of(context).pop(),
+          onBack: () => _navigatorKey.currentState!.pop(),
         ),
       ),
     );
   }
 
   void _openFilters() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => FiltersScreen(onClose: () => Navigator.of(context).pop())),
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(builder: (_) => FiltersScreen(onClose: () => _navigatorKey.currentState!.pop())),
     );
   }
 
   void _openServerSettings() {
-    Navigator.of(context).push(
+    _navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (_) => ServerSetupScreen(session: _session!, onSaved: () => Navigator.of(context).pop()),
+        builder: (_) => ServerSetupScreen(session: _session!, onSaved: () => _navigatorKey.currentState!.pop()),
       ),
+    );
+  }
+
+  void _openNotifications() {
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(session: _session!, onBack: () => _navigatorKey.currentState!.pop()),
+      ),
+    );
+  }
+
+  void _openPrivacy() {
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => PrivacyScreen(session: _session!, onBack: () => _navigatorKey.currentState!.pop()),
+      ),
+    );
+  }
+
+  void _openSubscription() {
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(builder: (_) => SubscriptionScreen(onBack: () => _navigatorKey.currentState!.pop())),
     );
   }
 
@@ -100,6 +132,7 @@ class _CrushapAppState extends State<CrushapApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'crushap',
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       locale: _session?.localeOverride,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -167,6 +200,9 @@ class _CrushapAppState extends State<CrushapApp> {
           activeTab: _tab,
           onTabChanged: _onTabChanged,
           onOpenServerSettings: _openServerSettings,
+          onOpenNotifications: _openNotifications,
+          onOpenPrivacy: _openPrivacy,
+          onOpenSubscription: _openSubscription,
           onLogout: _logout,
           onLocaleChanged: _onLocaleChanged,
         ),

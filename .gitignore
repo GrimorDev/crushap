@@ -1,4 +1,5 @@
 app-release.apk
+*.rdb
 
 # server (Node.js)
 server/node_modules/

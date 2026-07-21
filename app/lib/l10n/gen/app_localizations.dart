@@ -146,6 +146,30 @@ abstract class AppLocalizations {
   /// **'Find your spark tonight. No games, just genuine matches.'**
   String get onboardingHeadline;
 
+  /// No description provided for @onboardingSlide2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe. Match. Connect.'**
+  String get onboardingSlide2Title;
+
+  /// No description provided for @onboardingSlide2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'A quick swipe is all it takes — like who catches your eye, we\'ll tell you the moment it\'s mutual.'**
+  String get onboardingSlide2Body;
+
+  /// No description provided for @onboardingSlide3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat instantly'**
+  String get onboardingSlide3Title;
+
+  /// No description provided for @onboardingSlide3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you match, the conversation starts right away — real-time messages, no waiting around.'**
+  String get onboardingSlide3Body;
+
   /// No description provided for @getStarted.
   ///
   /// In en, this message translates to:
@@ -649,6 +673,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Keep Swiping'**
   String get keepSwiping;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsNewMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'New matches'**
+  String get notificationsNewMatches;
+
+  /// No description provided for @notificationsNewMatchesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified the moment someone matches with you.'**
+  String get notificationsNewMatchesDesc;
+
+  /// No description provided for @notificationsNewMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get notificationsNewMessages;
+
+  /// No description provided for @notificationsNewMessagesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when a match sends you a message.'**
+  String get notificationsNewMessagesDesc;
+
+  /// No description provided for @notificationsLikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get notificationsLikes;
+
+  /// No description provided for @notificationsLikesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Get notified when someone likes your profile.'**
+  String get notificationsLikesDesc;
+
+  /// No description provided for @notificationsAppUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'App updates'**
+  String get notificationsAppUpdates;
+
+  /// No description provided for @notificationsAppUpdatesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'News about new features and improvements.'**
+  String get notificationsAppUpdatesDesc;
+
+  /// No description provided for @privacyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & safety'**
+  String get privacyTitle;
+
+  /// No description provided for @privacyShowDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Show my distance'**
+  String get privacyShowDistance;
+
+  /// No description provided for @privacyShowDistanceDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let other people see how far away you are.'**
+  String get privacyShowDistanceDesc;
+
+  /// No description provided for @privacyShowOnlineStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Show online status'**
+  String get privacyShowOnlineStatus;
+
+  /// No description provided for @privacyShowOnlineStatusDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let your matches see when you\'re active.'**
+  String get privacyShowOnlineStatusDesc;
+
+  /// No description provided for @privacyReadReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Read receipts'**
+  String get privacyReadReceipts;
+
+  /// No description provided for @privacyReadReceiptsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Let matches see when you\'ve read their messages.'**
+  String get privacyReadReceiptsDesc;
+
+  /// No description provided for @privacyBlockedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked accounts'**
+  String get privacyBlockedSection;
+
+  /// No description provided for @privacyNoBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t blocked anyone.'**
+  String get privacyNoBlockedUsers;
+
+  /// No description provided for @subscriptionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get subscriptionTitle;
+
+  /// No description provided for @subscriptionHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Crushap Plus'**
+  String get subscriptionHeadline;
+
+  /// No description provided for @subscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the full experience and get noticed faster.'**
+  String get subscriptionSubtitle;
+
+  /// No description provided for @subscriptionFeatureUnlimitedLikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited likes'**
+  String get subscriptionFeatureUnlimitedLikes;
+
+  /// No description provided for @subscriptionFeatureSeeWhoLikesYou.
+  ///
+  /// In en, this message translates to:
+  /// **'See who likes you'**
+  String get subscriptionFeatureSeeWhoLikesYou;
+
+  /// No description provided for @subscriptionFeatureRewind.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewind your last swipe'**
+  String get subscriptionFeatureRewind;
+
+  /// No description provided for @subscriptionFeatureBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly profile boost'**
+  String get subscriptionFeatureBoost;
+
+  /// No description provided for @subscriptionPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'\$9.99 / month'**
+  String get subscriptionPrice;
+
+  /// No description provided for @subscriptionCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify me when it\'s ready'**
+  String get subscriptionCta;
+
+  /// No description provided for @subscriptionComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Crushap Plus is in the works — this screen shows what\'s coming, but nothing will be charged today.'**
+  String get subscriptionComingSoon;
+
+  /// No description provided for @subscriptionNotifyConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the list — we\'ll let you know.'**
+  String get subscriptionNotifyConfirmed;
 }
 
 class _AppLocalizationsDelegate

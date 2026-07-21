@@ -37,6 +37,20 @@ class AppLocalizationsPl extends AppLocalizations {
       'Znajdź swoją iskrę już dziś. Bez gierek, tylko prawdziwe dopasowania.';
 
   @override
+  String get onboardingSlide2Title => 'Przesuń. Dopasuj. Poznaj.';
+
+  @override
+  String get onboardingSlide2Body =>
+      'Wystarczy jedno przesunięcie — polub osobę, która przyciągnie Twój wzrok, a my damy Ci znać, gdy to wzajemne.';
+
+  @override
+  String get onboardingSlide3Title => 'Rozmawiaj od razu';
+
+  @override
+  String get onboardingSlide3Body =>
+      'Gdy tylko się dopasujecie, rozmowa zaczyna się natychmiast — wiadomości na żywo, bez czekania.';
+
+  @override
   String get getStarted => 'Zaczynajmy';
 
   @override
@@ -302,4 +316,100 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get keepSwiping => 'Przesuwaj dalej';
+
+  @override
+  String get notificationsTitle => 'Powiadomienia';
+
+  @override
+  String get notificationsNewMatches => 'Nowe dopasowania';
+
+  @override
+  String get notificationsNewMatchesDesc =>
+      'Otrzymuj powiadomienie, gdy tylko ktoś się z Tobą dopasuje.';
+
+  @override
+  String get notificationsNewMessages => 'Nowe wiadomości';
+
+  @override
+  String get notificationsNewMessagesDesc =>
+      'Otrzymuj powiadomienie, gdy dopasowanie wyśle Ci wiadomość.';
+
+  @override
+  String get notificationsLikes => 'Polubienia';
+
+  @override
+  String get notificationsLikesDesc =>
+      'Otrzymuj powiadomienie, gdy ktoś polubi Twój profil.';
+
+  @override
+  String get notificationsAppUpdates => 'Aktualizacje aplikacji';
+
+  @override
+  String get notificationsAppUpdatesDesc =>
+      'Nowości o nowych funkcjach i ulepszeniach.';
+
+  @override
+  String get privacyTitle => 'Prywatność i bezpieczeństwo';
+
+  @override
+  String get privacyShowDistance => 'Pokazuj moją odległość';
+
+  @override
+  String get privacyShowDistanceDesc =>
+      'Pozwól innym widzieć, jak daleko się znajdujesz.';
+
+  @override
+  String get privacyShowOnlineStatus => 'Pokazuj status online';
+
+  @override
+  String get privacyShowOnlineStatusDesc =>
+      'Pozwól swoim dopasowaniom widzieć, kiedy jesteś aktywny(-a).';
+
+  @override
+  String get privacyReadReceipts => 'Potwierdzenia odczytania';
+
+  @override
+  String get privacyReadReceiptsDesc =>
+      'Pozwól dopasowaniom widzieć, że przeczytałeś(-aś) ich wiadomości.';
+
+  @override
+  String get privacyBlockedSection => 'Zablokowane konta';
+
+  @override
+  String get privacyNoBlockedUsers => 'Nikogo jeszcze nie zablokowano.';
+
+  @override
+  String get subscriptionTitle => 'Subskrypcja';
+
+  @override
+  String get subscriptionHeadline => 'Crushap Plus';
+
+  @override
+  String get subscriptionSubtitle =>
+      'Odblokuj pełne możliwości i daj się zauważyć szybciej.';
+
+  @override
+  String get subscriptionFeatureUnlimitedLikes => 'Nielimitowane polubienia';
+
+  @override
+  String get subscriptionFeatureSeeWhoLikesYou => 'Zobacz, kto Cię polubił';
+
+  @override
+  String get subscriptionFeatureRewind => 'Cofnij ostatnie przesunięcie';
+
+  @override
+  String get subscriptionFeatureBoost => 'Comiesięczny boost profilu';
+
+  @override
+  String get subscriptionPrice => '39,99 zł / miesiąc';
+
+  @override
+  String get subscriptionCta => 'Powiadom mnie, gdy będzie gotowe';
+
+  @override
+  String get subscriptionComingSoon =>
+      'Crushap Plus jest w przygotowaniu — ten ekran pokazuje, co nadchodzi, ale dziś nic nie zostanie pobrane.';
+
+  @override
+  String get subscriptionNotifyConfirmed => 'Jesteś na liście — damy Ci znać.';
 }

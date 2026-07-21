@@ -8,6 +8,7 @@ import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
+import '../widgets/core/app_switch.dart';
 
 /// Ported from ui_kits/dating-app/FiltersScreen.jsx. The distance/age
 /// sliders and the verified-only toggle are hand-rolled in the source
@@ -104,7 +105,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                             Text(t.verifiedProfilesOnly, style: CrushapText.body),
                           ],
                         ),
-                        _CrushapSwitch(
+                        CrushapSwitch(
                           value: _verifiedOnly,
                           onChanged: (v) => setState(() => _verifiedOnly = v),
                         ),
@@ -222,39 +223,6 @@ class _CrushapSlider extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _CrushapSwitch extends StatelessWidget {
-  const _CrushapSwitch({required this.value, required this.onChanged});
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: CrushapEffects.durFast,
-        width: 46,
-        height: 28,
-        padding: const EdgeInsets.all(2),
-        alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-        decoration: BoxDecoration(
-          gradient: value ? CrushapColors.gradientPrimary : null,
-          color: value ? null : CrushapColors.surfaceCard,
-          borderRadius: BorderRadius.circular(CrushapRadii.pill),
-          border: Border.all(color: CrushapColors.borderSubtle),
-        ),
-        child: AnimatedContainer(
-          duration: CrushapEffects.durFast,
-          curve: CrushapEffects.easeSpring,
-          width: 22,
-          height: 22,
-          decoration: const BoxDecoration(color: Color(0xFFFFFFFF), shape: BoxShape.circle),
-        ),
-      ),
     );
   }
 }
