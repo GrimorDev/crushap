@@ -43,12 +43,30 @@ class MatchEntry {
 /// Mirrors the query params /api/discover understands. `showMe` is one of
 /// 'women' / 'men' / 'everyone' (or null, same as 'everyone' — no filter).
 class DiscoverFilters {
-  const DiscoverFilters({this.maxAge, this.maxDistanceKm, this.verifiedOnly = false, this.showMe});
+  const DiscoverFilters({
+    this.maxAge,
+    this.maxDistanceKm,
+    this.verifiedOnly = false,
+    this.hasPhoto = false,
+    this.showMe,
+    this.tags = const [],
+  });
 
   final int? maxAge;
   final double? maxDistanceKm;
   final bool verifiedOnly;
+  final bool hasPhoto;
   final String? showMe;
+  final List<String> tags;
+}
+
+/// `relaxedFilters` lists which of the caller's filters the server had to
+/// drop (in priority order — see server/src/routes/profiles.js) to find
+/// enough people; empty means every filter was honored as-is.
+class DiscoverResult {
+  const DiscoverResult({required this.profiles, required this.relaxedFilters});
+  final List<Profile> profiles;
+  final List<String> relaxedFilters;
 }
 
 /// Thin REST client for the crushap-server API (see server/README.md).
@@ -195,17 +213,22 @@ class ApiClient {
     await _decode(res);
   }
 
-  Future<List<Profile>> discover({DiscoverFilters? filters}) async {
+  Future<DiscoverResult> discover({DiscoverFilters? filters}) async {
     final query = <String, String>{};
     if (filters != null) {
       if (filters.maxAge != null) query['maxAge'] = filters.maxAge!.toString();
       if (filters.maxDistanceKm != null) query['maxDistanceKm'] = filters.maxDistanceKm!.toString();
       if (filters.verifiedOnly) query['verifiedOnly'] = 'true';
+      if (filters.hasPhoto) query['hasPhoto'] = 'true';
       if (filters.showMe != null) query['showMe'] = filters.showMe!;
+      if (filters.tags.isNotEmpty) query['tags'] = filters.tags.join(',');
     }
     final res = await http.get(_uri('/api/discover', query.isEmpty ? null : query), headers: _headers());
     final body = await _decode(res);
-    return (body['profiles'] as List).map((e) => Profile.fromJson(e as Map<String, dynamic>)).toList();
+    return DiscoverResult(
+      profiles: (body['profiles'] as List).map((e) => Profile.fromJson(e as Map<String, dynamic>)).toList(),
+      relaxedFilters: (body['relaxedFilters'] as List?)?.map((e) => e as String).toList() ?? const [],
+    );
   }
 
   Future<List<Profile>> search(String query) async {

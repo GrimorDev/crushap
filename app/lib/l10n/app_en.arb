@@ -52,6 +52,7 @@
 
   "discoverTitle": "Discover",
   "filtersLabel": "Filters",
+  "filtersWidenedNotice": "We widened your search a little to find more people.",
   "undoLabel": "Undo",
   "passLabel": "Pass",
   "superlikeLabel": "Superlike",
@@ -80,6 +81,7 @@
   "genderMen": "Men",
   "genderEveryone": "Everyone",
   "verifiedProfilesOnly": "Verified profiles only",
+  "hasPhotoOnly": "Has a photo",
   "refreshMyLocation": "Refresh my location",
   "applyFilters": "Apply filters",
 

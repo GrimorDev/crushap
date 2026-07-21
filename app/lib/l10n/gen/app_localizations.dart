@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get filtersLabel;
 
+  /// No description provided for @filtersWidenedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'We widened your search a little to find more people.'**
+  String get filtersWidenedNotice;
+
   /// No description provided for @undoLabel.
   ///
   /// In en, this message translates to:
@@ -523,6 +529,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified profiles only'**
   String get verifiedProfilesOnly;
+
+  /// No description provided for @hasPhotoOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a photo'**
+  String get hasPhotoOnly;
 
   /// No description provided for @refreshMyLocation.
   ///

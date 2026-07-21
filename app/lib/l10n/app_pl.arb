@@ -52,6 +52,7 @@
 
   "discoverTitle": "Odkrywaj",
   "filtersLabel": "Filtry",
+  "filtersWidenedNotice": "Trochę poszerzyliśmy wyszukiwanie, by znaleźć więcej osób.",
   "undoLabel": "Cofnij",
   "passLabel": "Pomiń",
   "superlikeLabel": "Super polubienie",
@@ -77,6 +78,7 @@
   "genderMen": "Mężczyzn",
   "genderEveryone": "Wszystkich",
   "verifiedProfilesOnly": "Tylko zweryfikowane profile",
+  "hasPhotoOnly": "Ma zdjęcie",
   "refreshMyLocation": "Odśwież moją lokalizację",
   "applyFilters": "Zastosuj filtry",
 

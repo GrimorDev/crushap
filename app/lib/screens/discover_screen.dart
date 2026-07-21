@@ -50,6 +50,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   int _idx = 0;
   bool _loading = true;
   String? _loadError;
+  List<String> _relaxedFilters = const [];
 
   Profile? _lastSwiped;
   bool _lastMatched = false;
@@ -73,16 +74,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     });
     try {
       final session = widget.api.session;
-      final profiles = await widget.api.discover(
+      final result = await widget.api.discover(
         filters: DiscoverFilters(
           maxAge: session.filterMaxAge,
           maxDistanceKm: session.filterMaxDistanceKm,
           showMe: session.filterShowMe,
           verifiedOnly: session.filterVerifiedOnly,
+          hasPhoto: session.filterHasPhoto,
+          tags: session.filterTags,
         ),
       );
       setState(() {
-        _deck = profiles;
+        _deck = result.profiles;
+        _relaxedFilters = result.relaxedFilters;
         _idx = 0;
         _photoIndex = 0;
         _loading = false;
@@ -235,6 +239,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ],
               ),
             ),
+            if (_relaxedFilters.isNotEmpty && _current != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CrushapIcon('sparkles', size: 13, color: CrushapColors.textTertiary),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        t.filtersWidenedNotice,
+                        textAlign: TextAlign.center,
+                        style: CrushapText.caption.copyWith(color: CrushapColors.textTertiary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             Expanded(child: Center(child: _buildBody(t, stamp))),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 4, 0, 20),

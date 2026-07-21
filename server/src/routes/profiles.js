@@ -70,6 +70,18 @@ router.delete('/me/photos', async (req, res) => {
 
 const GENDER_SHOW_ME = { women: 'woman', men: 'man' }; // 'everyone' (or absent) = no filter
 
+// Discovery is meant to prioritize real proximity, but a strict filter
+// combination can easily leave someone staring at an empty deck in a
+// smaller deployment. Rather than fail that way, /discover relaxes
+// "soft" preferences one at a time — cheapest-to-give-up first — until
+// there are enough candidates, or there's nothing left to relax.
+// `showMe` (gender preference) is never auto-relaxed: it's a deliberate
+// choice, not a nice-to-have, so it stays a hard filter throughout.
+// `maxDistanceKm` is relaxed last, since "mainly by location" is the
+// point of the feature — everything else gives way before that does.
+const MIN_RESULTS = 5;
+const RELAX_ORDER = ['hasPhoto', 'tags', 'verifiedOnly', 'maxAge', 'maxDistanceKm'];
+
 router.get('/discover', async (req, res) => {
   const [allIds, swipedIds] = await Promise.all([
     users.allUserIds(),
@@ -88,31 +100,70 @@ router.get('/discover', async (req, res) => {
   const maxAge = req.query.maxAge != null ? parseInt(req.query.maxAge, 10) : null;
   const maxDistanceKm = req.query.maxDistanceKm != null ? parseFloat(req.query.maxDistanceKm) : null;
   const verifiedOnly = req.query.verifiedOnly === 'true';
+  const hasPhotoOnly = req.query.hasPhoto === 'true';
   const wantGender = GENDER_SHOW_ME[req.query.showMe] || null;
+  const wantTags = String(req.query.tags || '')
+    .split(',')
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
 
-  // Filtering has to happen before the 30-profile cap, not after (we can't
-  // know which candidates will pass without checking), so this fetches
-  // every remaining candidate rather than just the first 30 — fine at the
-  // "small deployment" scale this shuffle-based approach already assumes.
-  const candidates = await Promise.all(
-    candidateIds.map(async (id) => {
-      const [raw, photos, distanceKm] = await Promise.all([
-        users.getUserRaw(id),
-        users.getPhotos(id),
-        users.distanceKm(req.userId, id),
-      ]);
-      if (!raw) return null;
-      if (maxAge != null && parseInt(raw.age, 10) > maxAge) return null;
-      if (verifiedOnly && raw.verified !== '1') return null;
-      if (wantGender && raw.gender !== wantGender) return null;
-      // Only enforce a distance cap when we actually know the distance —
-      // a user who hasn't shared their location shouldn't just vanish
-      // from everyone's discovery because we can't measure it.
-      if (maxDistanceKm != null && distanceKm != null && distanceKm > maxDistanceKm) return null;
-      return users.toPublicProfile(raw, { photos, distance: distanceKm });
-    })
-  );
-  res.json({ profiles: candidates.filter(Boolean).slice(0, 30) });
+  // Fetched once per candidate, up front — filtering has to happen before
+  // the 30-profile cap (we can't know who'll pass without checking), and
+  // the relaxation ladder below re-evaluates the same data multiple times.
+  // Fine at the "small deployment" scale this endpoint already assumes.
+  const enriched = (
+    await Promise.all(
+      candidateIds.map(async (id) => {
+        const [raw, photos, distanceKm] = await Promise.all([
+          users.getUserRaw(id),
+          users.getPhotos(id),
+          users.distanceKm(req.userId, id),
+        ]);
+        if (!raw) return null;
+        if (wantGender && raw.gender !== wantGender) return null; // hard filter
+        const tags = JSON.parse(raw.tags || '[]').map((t) => t.toLowerCase());
+        return {
+          raw,
+          photos,
+          distanceKm,
+          passes: {
+            hasPhoto: photos.length > 0,
+            tags: wantTags.some((t) => tags.includes(t)),
+            verifiedOnly: raw.verified === '1',
+            maxAge: maxAge == null || parseInt(raw.age, 10) <= maxAge,
+            // Only enforce a distance cap when we actually know the distance
+            // — a candidate who hasn't shared their location shouldn't just
+            // vanish from discovery because it can't be measured.
+            maxDistanceKm: distanceKm == null || (maxDistanceKm != null && distanceKm <= maxDistanceKm),
+          },
+        };
+      })
+    )
+  ).filter(Boolean);
+
+  const active = new Set();
+  if (hasPhotoOnly) active.add('hasPhoto');
+  if (wantTags.length) active.add('tags');
+  if (verifiedOnly) active.add('verifiedOnly');
+  if (maxAge != null) active.add('maxAge');
+  if (maxDistanceKm != null) active.add('maxDistanceKm');
+
+  const dropped = [];
+  const evaluate = () => {
+    const required = [...active].filter((f) => !dropped.includes(f));
+    return enriched.filter((c) => required.every((f) => c.passes[f]));
+  };
+
+  let matched = evaluate();
+  while (matched.length < MIN_RESULTS) {
+    const next = RELAX_ORDER.find((f) => active.has(f) && !dropped.includes(f));
+    if (!next) break; // nothing left we're allowed to relax
+    dropped.push(next);
+    matched = evaluate();
+  }
+
+  const profiles = matched.slice(0, 30).map((c) => users.toPublicProfile(c.raw, { photos: c.photos, distance: c.distanceKm }));
+  res.json({ profiles, relaxedFilters: dropped });
 });
 
 router.get('/search', async (req, res) => {

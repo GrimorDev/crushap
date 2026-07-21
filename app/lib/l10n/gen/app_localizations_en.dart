@@ -158,6 +158,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filtersLabel => 'Filters';
 
   @override
+  String get filtersWidenedNotice =>
+      'We widened your search a little to find more people.';
+
+  @override
   String get undoLabel => 'Undo';
 
   @override
@@ -235,6 +239,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifiedProfilesOnly => 'Verified profiles only';
+
+  @override
+  String get hasPhotoOnly => 'Has a photo';
 
   @override
   String get refreshMyLocation => 'Refresh my location';

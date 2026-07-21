@@ -89,22 +89,30 @@ class Session {
   static const _kFilterMaxDistanceKm = 'filter_max_distance_km';
   static const _kFilterShowMe = 'filter_show_me';
   static const _kFilterVerifiedOnly = 'filter_verified_only';
+  static const _kFilterHasPhoto = 'filter_has_photo';
+  static const _kFilterTags = 'filter_tags';
 
   int? get filterMaxAge => _prefs.getInt(_kFilterMaxAge);
   double? get filterMaxDistanceKm => _prefs.getDouble(_kFilterMaxDistanceKm);
   /// One of 'women' / 'men' / 'everyone', or null (same as 'everyone').
   String? get filterShowMe => _prefs.getString(_kFilterShowMe);
   bool get filterVerifiedOnly => _prefs.getBool(_kFilterVerifiedOnly) ?? false;
+  bool get filterHasPhoto => _prefs.getBool(_kFilterHasPhoto) ?? false;
+  List<String> get filterTags => _prefs.getStringList(_kFilterTags) ?? const [];
 
   Future<void> saveFilters({
     required int maxAge,
     required double maxDistanceKm,
     required String showMe,
     required bool verifiedOnly,
+    required bool hasPhoto,
+    required List<String> tags,
   }) async {
     await _prefs.setInt(_kFilterMaxAge, maxAge);
     await _prefs.setDouble(_kFilterMaxDistanceKm, maxDistanceKm);
     await _prefs.setString(_kFilterShowMe, showMe);
     await _prefs.setBool(_kFilterVerifiedOnly, verifiedOnly);
+    await _prefs.setBool(_kFilterHasPhoto, hasPhoto);
+    await _prefs.setStringList(_kFilterTags, tags);
   }
 }

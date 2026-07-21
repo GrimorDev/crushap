@@ -160,6 +160,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get filtersLabel => 'Filtry';
 
   @override
+  String get filtersWidenedNotice =>
+      'Trochę poszerzyliśmy wyszukiwanie, by znaleźć więcej osób.';
+
+  @override
   String get undoLabel => 'Cofnij';
 
   @override
@@ -237,6 +241,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get verifiedProfilesOnly => 'Tylko zweryfikowane profile';
+
+  @override
+  String get hasPhotoOnly => 'Ma zdjęcie';
 
   @override
   String get refreshMyLocation => 'Odśwież moją lokalizację';

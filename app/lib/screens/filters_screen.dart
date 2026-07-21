@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../constants.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../services/api_client.dart';
 import '../services/location_service.dart';
@@ -37,6 +38,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
   late double _distance = widget.session.filterMaxDistanceKm ?? 25;
   late int _showMe = _showMeValues.indexOf(widget.session.filterShowMe ?? 'everyone').clamp(0, 2);
   late bool _verifiedOnly = widget.session.filterVerifiedOnly;
+  late bool _hasPhoto = widget.session.filterHasPhoto;
+  late final Set<String> _tags = widget.session.filterTags.toSet();
   bool _locating = false;
   bool _locationRefreshed = false;
 
@@ -46,6 +49,8 @@ class _FiltersScreenState extends State<FiltersScreen> {
       maxDistanceKm: _distance,
       showMe: _showMeValues[_showMe],
       verifiedOnly: _verifiedOnly,
+      hasPhoto: _hasPhoto,
+      tags: _tags.toList(),
     );
     if (mounted) widget.onClose();
   }
@@ -144,6 +149,38 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           value: _verifiedOnly,
                           onChanged: (v) => setState(() => _verifiedOnly = v),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const CrushapIcon('image', size: 18, color: CrushapColors.accentPrimary),
+                            const SizedBox(width: 8),
+                            Text(t.hasPhotoOnly, style: CrushapText.body),
+                          ],
+                        ),
+                        CrushapSwitch(
+                          value: _hasPhoto,
+                          onChanged: (v) => setState(() => _hasPhoto = v),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    Text(t.interestsSection, style: CrushapText.body),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final tag in kInterestOptions)
+                          CrushapChip(
+                            label: tag,
+                            selected: _tags.contains(tag),
+                            onTap: () => setState(() => _tags.contains(tag) ? _tags.remove(tag) : _tags.add(tag)),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 28),
