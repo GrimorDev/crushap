@@ -5,7 +5,7 @@ const emailKey = (email) => `email:index:${email.toLowerCase().trim()}`;
 const userKey = (id) => `user:${id}`;
 const photosKey = (id) => `user:${id}:photos`;
 
-async function createUser({ name, email, passwordHash, age, bio, tags, gender }) {
+async function createUser({ name, email, passwordHash, age, bio, tags, gender, lookingFor }) {
   const id = uuid();
   await redis.hset(userKey(id), {
     id,
@@ -16,6 +16,7 @@ async function createUser({ name, email, passwordHash, age, bio, tags, gender })
     bio: bio || '',
     tags: JSON.stringify(tags || []),
     gender: gender || '',
+    lookingFor: lookingFor || '',
     verified: '0',
     createdAt: String(Date.now()),
   });
@@ -44,6 +45,7 @@ async function updateUser(id, fields) {
   if (fields.age != null) patch.age = String(fields.age);
   if (fields.tags != null) patch.tags = JSON.stringify(fields.tags);
   if (fields.gender != null) patch.gender = fields.gender;
+  if (fields.lookingFor != null) patch.lookingFor = fields.lookingFor;
   if (Object.keys(patch).length) await redis.hset(userKey(id), patch);
   if (fields.lat != null && fields.lng != null) {
     await redis.geoadd('geo:users', fields.lng, fields.lat, id);
@@ -93,6 +95,7 @@ function toPublicProfile(raw, { photos = [], distance = null } = {}) {
     bio: raw.bio || '',
     tags: parseTags(raw),
     gender: raw.gender || null,
+    lookingFor: raw.lookingFor || null,
     verified: raw.verified === '1',
     photos,
     distanceKm: distance,

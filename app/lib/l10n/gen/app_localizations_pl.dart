@@ -93,6 +93,28 @@ class AppLocalizationsPl extends AppLocalizations {
   String get genderIdentityNonBinary => 'Niebinarna/-y';
 
   @override
+  String get lookingForStepTitle => 'Czego szukasz?';
+
+  @override
+  String get lookingForRelationship => 'Związku';
+
+  @override
+  String get lookingForCasual => 'Czegoś na luzie';
+
+  @override
+  String get lookingForFriends => 'Nowych znajomych';
+
+  @override
+  String get lookingForUnsure => 'Jeszcze się zastanawiam';
+
+  @override
+  String get lookingForSection => 'Szukam';
+
+  @override
+  String get lookingForNotSet =>
+      'Jeszcze nie ustawiono — dotknij „Edytuj profil”, aby dodać.';
+
+  @override
   String get interestsStepTitle => 'Wybierz kilka zainteresowań';
 
   @override
@@ -155,6 +177,23 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get discoverTitle => 'Odkrywaj';
+
+  @override
+  String discoverGreeting(String name) {
+    return 'Cześć, $name';
+  }
+
+  @override
+  String get discoverHeadline => 'Znajdźmy dopasowanie';
+
+  @override
+  String get findYourPartner => 'Znajdź swoją drugą połówkę…';
+
+  @override
+  String get discoverModeDating => 'Odkrywaj';
+
+  @override
+  String get discoverModeFriends => 'Znajdź znajomych';
 
   @override
   String get filtersLabel => 'Filtry';
@@ -278,6 +317,25 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get noMatchesYet =>
       'Twoje dopasowania pojawią się tutaj. Zacznij przesuwać w Odkrywaj.';
+
+  @override
+  String get likesRow => 'Polubienia';
+
+  @override
+  String get likesTitle => 'Polubienia';
+
+  @override
+  String get allLikesTab => 'Wszystkie';
+
+  @override
+  String get newLikesTab => 'Nowe';
+
+  @override
+  String get noLikesYetTitle => 'Brak polubień';
+
+  @override
+  String get noLikesYetMessage =>
+      'Gdy ktoś polubi Twój profil, pojawi się tutaj.';
 
   @override
   String get searchPlaceholder => 'Szukaj po imieniu lub zainteresowaniu';

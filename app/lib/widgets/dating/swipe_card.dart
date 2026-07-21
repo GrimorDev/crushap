@@ -20,6 +20,8 @@ class CrushapSwipeCard extends StatelessWidget {
     this.distance,
     this.verified = false,
     this.verifiedLabel = 'Verified',
+    this.statusLabel,
+    this.statusIcon,
     this.bio,
     this.tags = const [],
     this.photoUrls = const [],
@@ -34,6 +36,10 @@ class CrushapSwipeCard extends StatelessWidget {
   final String? distance;
   final bool verified;
   final String verifiedLabel;
+  /// The "Ready for relationship"-style status pill, top-left of the
+  /// photo — null hides it (e.g. lookingFor unset).
+  final String? statusLabel;
+  final String? statusIcon;
   final String? bio;
   final List<String> tags;
   final List<String> photoUrls;
@@ -99,6 +105,28 @@ class CrushapSwipeCard extends StatelessWidget {
                     ),
                   ],
                 ],
+              ),
+            ),
+          if (statusLabel != null)
+            Positioned(
+              top: photoUrls.length > 1 ? 28 : 12,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0x99000000), // rgba(0,0,0,.6)
+                  borderRadius: BorderRadius.circular(CrushapRadii.pill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (statusIcon != null) ...[
+                      CrushapIcon(statusIcon!, size: 13, color: CrushapColors.accentPrimary),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(statusLabel!, style: CrushapText.caption.copyWith(color: CrushapColors.textPrimary)),
+                  ],
+                ),
               ),
             ),
           Positioned(

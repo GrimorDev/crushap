@@ -61,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final _bioController = TextEditingController();
   final Set<String> _editTags = {};
   String? _editGender;
+  String? _editLookingFor;
 
   @override
   void initState() {
@@ -91,6 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ..clear()
       ..addAll(me.tags);
     _editGender = me.gender;
+    _editLookingFor = me.lookingFor;
     setState(() => _editing = true);
   }
 
@@ -101,6 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         bio: _bioController.text.trim(),
         tags: _editTags.toList(),
         gender: _editGender,
+        lookingFor: _editLookingFor,
       );
       setState(() {
         _me = updated;
@@ -227,6 +230,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
       ),
       const SizedBox(height: 24),
+      _SectionLabel(t.lookingForSection),
+      const SizedBox(height: 10),
+      Text(
+        me.lookingFor == null ? t.lookingForNotSet : _lookingForLabel(t, me.lookingFor!),
+        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+      ),
+      const SizedBox(height: 24),
       _SectionLabel(t.interestsSection),
       const SizedBox(height: 10),
       me.tags.isEmpty
@@ -243,6 +253,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'woman' => t.genderIdentityWoman,
         'man' => t.genderIdentityMan,
         _ => t.genderIdentityNonBinary,
+      };
+
+  String _lookingForLabel(AppLocalizations t, String value) => switch (value) {
+        'relationship' => t.lookingForRelationship,
+        'casual' => t.lookingForCasual,
+        'friends' => t.lookingForFriends,
+        _ => t.lookingForUnsure,
       };
 
   List<Widget> _buildEditor(AppLocalizations t) {
@@ -263,6 +280,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: _genderLabel(t, value),
                 selected: _editGender == value,
                 onTap: () => setInner(() => _editGender = value),
+              ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 24),
+      _SectionLabel(t.lookingForSection),
+      const SizedBox(height: 10),
+      StatefulBuilder(
+        builder: (context, setInner) => Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final value in const ['relationship', 'casual', 'friends', 'unsure'])
+              CrushapChip(
+                label: _lookingForLabel(t, value),
+                selected: _editLookingFor == value,
+                onTap: () => setInner(() => _editLookingFor = value),
               ),
           ],
         ),

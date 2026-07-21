@@ -29,6 +29,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api', require('./routes/profiles'));
 app.use('/api/swipes', require('./routes/swipes'));
 app.use('/api/matches', require('./routes/matches'));
+app.use('/api/likes', require('./routes/likes'));
 app.use('/api/chat', require('./routes/chat'));
 
 app.use((err, req, res, next) => {

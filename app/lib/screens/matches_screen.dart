@@ -1,9 +1,11 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../theme/colors.dart';
+import '../theme/spacing.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
 import '../widgets/core/app_icon.dart';
@@ -19,12 +21,14 @@ class MatchesScreen extends StatefulWidget {
     super.key,
     required this.api,
     required this.onOpenThread,
+    required this.onOpenLikes,
     required this.activeTab,
     required this.onTabChanged,
   });
 
   final ApiClient api;
   final ValueChanged<Profile> onOpenThread;
+  final VoidCallback onOpenLikes;
   final CrushapNavTab activeTab;
   final ValueChanged<CrushapNavTab> onTabChanged;
 
@@ -63,6 +67,30 @@ class _MatchesScreenState extends State<MatchesScreen> {
               width: double.infinity,
               height: 52,
               child: Center(child: Text(t.matchesTitle, style: CrushapText.title)),
+            ),
+            GestureDetector(
+              onTap: widget.onOpenLikes,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: CrushapColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(CrushapRadii.md),
+                  border: Border.all(color: CrushapColors.borderSubtle),
+                ),
+                child: Row(
+                  children: [
+                    const CrushapIcon('star', size: 18, color: CrushapColors.accentSecondary),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(t.likesRow, style: CrushapText.body)),
+                    Transform.rotate(
+                      angle: math.pi,
+                      child: const CrushapIcon('chevron-left', size: 14, color: CrushapColors.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
             ),
             Expanded(
               child: matches == null

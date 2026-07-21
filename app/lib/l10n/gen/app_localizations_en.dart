@@ -92,6 +92,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genderIdentityNonBinary => 'Non-binary';
 
   @override
+  String get lookingForStepTitle => 'What are you looking for?';
+
+  @override
+  String get lookingForRelationship => 'A relationship';
+
+  @override
+  String get lookingForCasual => 'Something casual';
+
+  @override
+  String get lookingForFriends => 'New friends';
+
+  @override
+  String get lookingForUnsure => 'Still figuring it out';
+
+  @override
+  String get lookingForSection => 'Looking for';
+
+  @override
+  String get lookingForNotSet => 'Not set yet — tap Edit profile to add it.';
+
+  @override
   String get interestsStepTitle => 'Pick a few interests';
 
   @override
@@ -153,6 +174,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoverTitle => 'Discover';
+
+  @override
+  String discoverGreeting(String name) {
+    return 'Hello, $name';
+  }
+
+  @override
+  String get discoverHeadline => 'Let\'s Find a Match';
+
+  @override
+  String get findYourPartner => 'Find your partner…';
+
+  @override
+  String get discoverModeDating => 'Discover';
+
+  @override
+  String get discoverModeFriends => 'Make Friends';
 
   @override
   String get filtersLabel => 'Filters';
@@ -276,6 +314,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noMatchesYet =>
       'Your matches will show up here. Get swiping on Discover.';
+
+  @override
+  String get likesRow => 'Likes';
+
+  @override
+  String get likesTitle => 'Likes';
+
+  @override
+  String get allLikesTab => 'All like';
+
+  @override
+  String get newLikesTab => 'New like';
+
+  @override
+  String get noLikesYetTitle => 'No likes yet';
+
+  @override
+  String get noLikesYetMessage =>
+      'When someone likes your profile, they\'ll show up here.';
 
   @override
   String get searchPlaceholder => 'Search by name or interest';

@@ -6,6 +6,7 @@ import 'screens/chat_inbox_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/discover_screen.dart';
 import 'screens/filters_screen.dart';
+import 'screens/likes_screen.dart';
 import 'screens/matches_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
@@ -85,6 +86,18 @@ class _CrushapAppState extends State<CrushapApp> {
           matchId: profile.id,
           matchName: profile.name,
           matchPhotoUrl: _api!.mediaUrl(profile.photos.isNotEmpty ? profile.photos.first : null),
+          onBack: () => _navigatorKey.currentState!.pop(),
+        ),
+      ),
+    );
+  }
+
+  void _openLikes() {
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => LikesScreen(
+          api: _api!,
+          onMatch: _onMatch,
           onBack: () => _navigatorKey.currentState!.pop(),
         ),
       ),
@@ -222,6 +235,7 @@ class _CrushapAppState extends State<CrushapApp> {
       CrushapNavTab.matches => MatchesScreen(
           api: api,
           onOpenThread: _openThread,
+          onOpenLikes: _openLikes,
           activeTab: _tab,
           onTabChanged: _onTabChanged,
         ),

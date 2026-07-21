@@ -40,6 +40,12 @@ class MatchEntry {
   final String? lastMessageText;
 }
 
+class LikeEntry {
+  const LikeEntry({required this.profile, required this.isNew});
+  final Profile profile;
+  final bool isNew;
+}
+
 /// Mirrors the query params /api/discover understands. `showMe` is one of
 /// 'women' / 'men' / 'everyone' (or null, same as 'everyone' — no filter).
 class DiscoverFilters {
@@ -50,6 +56,7 @@ class DiscoverFilters {
     this.hasPhoto = false,
     this.showMe,
     this.tags = const [],
+    this.friendsMode = false,
   });
 
   final int? maxAge;
@@ -58,6 +65,9 @@ class DiscoverFilters {
   final bool hasPhoto;
   final String? showMe;
   final List<String> tags;
+  /// true = Discover's "Make Friends" toggle: only shows people whose
+  /// lookingFor is 'friends' — a hard filter, same as showMe.
+  final bool friendsMode;
 }
 
 /// `relaxedFilters` lists which of the caller's filters the server had to
@@ -118,6 +128,7 @@ class ApiClient {
     String? bio,
     List<String>? tags,
     String? gender,
+    String? lookingFor,
   }) async {
     final res = await http.post(
       _uri('/api/auth/register'),
@@ -130,6 +141,7 @@ class ApiClient {
         'bio': bio,
         'tags': tags,
         'gender': gender,
+        'lookingFor': lookingFor,
       }),
     );
     final body = await _decode(res);
@@ -158,6 +170,7 @@ class ApiClient {
     int? age,
     List<String>? tags,
     String? gender,
+    String? lookingFor,
     double? lat,
     double? lng,
   }) async {
@@ -170,6 +183,7 @@ class ApiClient {
       'age': ?age,
       'tags': ?tags,
       'gender': ?gender,
+      'lookingFor': ?lookingFor,
       'lat': ?lat,
       'lng': ?lng,
     };
@@ -222,6 +236,7 @@ class ApiClient {
       if (filters.hasPhoto) query['hasPhoto'] = 'true';
       if (filters.showMe != null) query['showMe'] = filters.showMe!;
       if (filters.tags.isNotEmpty) query['tags'] = filters.tags.join(',');
+      if (filters.friendsMode) query['mode'] = 'friends';
     }
     final res = await http.get(_uri('/api/discover', query.isEmpty ? null : query), headers: _headers());
     final body = await _decode(res);
@@ -267,6 +282,15 @@ class ApiClient {
       final map = e as Map<String, dynamic>;
       final lastMessage = map['lastMessage'] as Map<String, dynamic>?;
       return MatchEntry(profile: Profile.fromJson(map), lastMessageText: lastMessage?['text'] as String?);
+    }).toList();
+  }
+
+  Future<List<LikeEntry>> likes() async {
+    final res = await http.get(_uri('/api/likes'), headers: _headers());
+    final body = await _decode(res);
+    return (body['likes'] as List).map((e) {
+      final map = e as Map<String, dynamic>;
+      return LikeEntry(profile: Profile.fromJson(map), isNew: map['isNew'] as bool? ?? false);
     }).toList();
   }
 

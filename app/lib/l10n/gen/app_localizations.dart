@@ -254,6 +254,48 @@ abstract class AppLocalizations {
   /// **'Non-binary'**
   String get genderIdentityNonBinary;
 
+  /// No description provided for @lookingForStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you looking for?'**
+  String get lookingForStepTitle;
+
+  /// No description provided for @lookingForRelationship.
+  ///
+  /// In en, this message translates to:
+  /// **'A relationship'**
+  String get lookingForRelationship;
+
+  /// No description provided for @lookingForCasual.
+  ///
+  /// In en, this message translates to:
+  /// **'Something casual'**
+  String get lookingForCasual;
+
+  /// No description provided for @lookingForFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'New friends'**
+  String get lookingForFriends;
+
+  /// No description provided for @lookingForUnsure.
+  ///
+  /// In en, this message translates to:
+  /// **'Still figuring it out'**
+  String get lookingForUnsure;
+
+  /// No description provided for @lookingForSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for'**
+  String get lookingForSection;
+
+  /// No description provided for @lookingForNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set yet — tap Edit profile to add it.'**
+  String get lookingForNotSet;
+
   /// No description provided for @interestsStepTitle.
   ///
   /// In en, this message translates to:
@@ -373,6 +415,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discover'**
   String get discoverTitle;
+
+  /// No description provided for @discoverGreeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String discoverGreeting(String name);
+
+  /// No description provided for @discoverHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s Find a Match'**
+  String get discoverHeadline;
+
+  /// No description provided for @findYourPartner.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your partner…'**
+  String get findYourPartner;
+
+  /// No description provided for @discoverModeDating.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get discoverModeDating;
+
+  /// No description provided for @discoverModeFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Make Friends'**
+  String get discoverModeFriends;
 
   /// No description provided for @filtersLabel.
   ///
@@ -595,6 +667,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your matches will show up here. Get swiping on Discover.'**
   String get noMatchesYet;
+
+  /// No description provided for @likesRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get likesRow;
+
+  /// No description provided for @likesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get likesTitle;
+
+  /// No description provided for @allLikesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'All like'**
+  String get allLikesTab;
+
+  /// No description provided for @newLikesTab.
+  ///
+  /// In en, this message translates to:
+  /// **'New like'**
+  String get newLikesTab;
+
+  /// No description provided for @noLikesYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No likes yet'**
+  String get noLikesYetTitle;
+
+  /// No description provided for @noLikesYetMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When someone likes your profile, they\'ll show up here.'**
+  String get noLikesYetMessage;
 
   /// No description provided for @searchPlaceholder.
   ///

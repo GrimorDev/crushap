@@ -34,13 +34,17 @@ router.get('/me', asyncHandler(async (req, res) => {
 }));
 
 const VALID_GENDERS = new Set(['woman', 'man', 'nonbinary']);
+const VALID_LOOKING_FOR = new Set(['relationship', 'casual', 'friends', 'unsure']);
 
 router.patch('/me', asyncHandler(async (req, res) => {
-  const { name, bio, age, tags, gender, lat, lng } = req.body || {};
+  const { name, bio, age, tags, gender, lookingFor, lat, lng } = req.body || {};
   if (gender != null && !VALID_GENDERS.has(gender)) {
     return res.status(400).json({ error: 'gender must be one of woman, man, nonbinary' });
   }
-  await users.updateUser(req.userId, { name, bio, age, tags, gender, lat, lng });
+  if (lookingFor != null && !VALID_LOOKING_FOR.has(lookingFor)) {
+    return res.status(400).json({ error: 'lookingFor must be one of relationship, casual, friends, unsure' });
+  }
+  await users.updateUser(req.userId, { name, bio, age, tags, gender, lookingFor, lat, lng });
   const raw = await users.getUserRaw(req.userId);
   const photos = await users.getPhotos(req.userId);
   res.json({ user: users.toPublicProfile(raw, { photos }) });
@@ -103,6 +107,9 @@ router.get('/discover', asyncHandler(async (req, res) => {
   const verifiedOnly = req.query.verifiedOnly === 'true';
   const hasPhotoOnly = req.query.hasPhoto === 'true';
   const wantGender = GENDER_SHOW_ME[req.query.showMe] || null;
+  // 'friends' mode is a distinct discovery intent, not a preference to
+  // relax away from — same treatment as gender: a hard filter throughout.
+  const friendsMode = req.query.mode === 'friends';
   const wantTags = String(req.query.tags || '')
     .split(',')
     .map((t) => t.trim().toLowerCase())
@@ -122,6 +129,7 @@ router.get('/discover', asyncHandler(async (req, res) => {
         ]);
         if (!raw) return null;
         if (wantGender && raw.gender !== wantGender) return null; // hard filter
+        if (friendsMode && raw.lookingFor !== 'friends') return null; // hard filter
         const tags = users.parseTags(raw).map((t) => t.toLowerCase());
         return {
           raw,

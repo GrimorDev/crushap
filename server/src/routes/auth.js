@@ -7,9 +7,10 @@ const { asyncHandler } = require('../asyncHandler');
 const router = express.Router();
 
 const VALID_GENDERS = new Set(['woman', 'man', 'nonbinary']);
+const VALID_LOOKING_FOR = new Set(['relationship', 'casual', 'friends', 'unsure']);
 
 router.post('/register', asyncHandler(async (req, res) => {
-  const { name, email, password, age, bio, tags, gender } = req.body || {};
+  const { name, email, password, age, bio, tags, gender, lookingFor } = req.body || {};
   if (!name || !email || !password || !age) {
     return res.status(400).json({ error: 'name, email, password, age are required' });
   }
@@ -19,12 +20,15 @@ router.post('/register', asyncHandler(async (req, res) => {
   if (gender != null && !VALID_GENDERS.has(gender)) {
     return res.status(400).json({ error: 'gender must be one of woman, man, nonbinary' });
   }
+  if (lookingFor != null && !VALID_LOOKING_FOR.has(lookingFor)) {
+    return res.status(400).json({ error: 'lookingFor must be one of relationship, casual, friends, unsure' });
+  }
   if (await users.findIdByEmail(email)) {
     return res.status(409).json({ error: 'An account with that email already exists' });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const id = await users.createUser({ name, email, passwordHash, age, bio, tags, gender });
+  const id = await users.createUser({ name, email, passwordHash, age, bio, tags, gender, lookingFor });
   const token = signToken(id);
   const raw = await users.getUserRaw(id);
   res.status(201).json({ token, user: users.toPublicProfile(raw) });

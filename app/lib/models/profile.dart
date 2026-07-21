@@ -11,6 +11,7 @@ class Profile {
     required this.bio,
     required this.tags,
     this.gender,
+    this.lookingFor,
     this.photos = const [],
   });
 
@@ -24,6 +25,9 @@ class Profile {
   /// One of 'woman' / 'man' / 'nonbinary', or null for accounts created
   /// before this field existed (or who skipped it, if that's ever allowed).
   final String? gender;
+  /// One of 'relationship' / 'casual' / 'friends' / 'unsure', or null if
+  /// unset — shown as the status pill on the swipe card.
+  final String? lookingFor;
   final List<String> photos;
 
   /// Formatted distance value only — the "X km away" phrasing is locale-
@@ -41,6 +45,7 @@ class Profile {
       bio: j['bio'] as String? ?? '',
       tags: (j['tags'] as List?)?.map((e) => e as String).toList() ?? const [],
       gender: j['gender'] as String?,
+      lookingFor: j['lookingFor'] as String?,
       photos: (j['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
     );
   }

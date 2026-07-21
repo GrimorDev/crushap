@@ -45,6 +45,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _passwordController = TextEditingController();
   final _ageController = TextEditingController();
   String? _gender;
+  String? _lookingFor;
   final Set<String> _interests = {};
   Uint8List? _photoBytes;
   String? _photoName;
@@ -103,6 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         age: int.parse(_ageController.text.trim()),
         tags: _interests.toList(),
         gender: _gender,
+        lookingFor: _lookingFor,
       );
       await widget.session.setAuth(token: token, userId: me.id);
     } on ApiException catch (e) {
@@ -187,24 +189,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onBack: () => setState(() => _step = 3),
                 onContinue: () => setState(() => _step = 5),
               ),
-            5 => _InterestsStep(
-                selected: _interests,
-                onToggle: _toggleInterest,
+            5 => _LookingForStep(
+                selected: _lookingFor,
+                onSelect: (v) => setState(() => _lookingFor = v),
                 onBack: () => setState(() => _step = 4),
                 onContinue: () => setState(() => _step = 6),
               ),
-            6 => _PhotoStep(
-                photoBytes: _photoBytes,
-                onPick: _pickPhoto,
+            6 => _InterestsStep(
+                selected: _interests,
+                onToggle: _toggleInterest,
                 onBack: () => setState(() => _step = 5),
                 onContinue: () => setState(() => _step = 7),
+              ),
+            7 => _PhotoStep(
+                photoBytes: _photoBytes,
+                onPick: _pickPhoto,
+                onBack: () => setState(() => _step = 6),
+                onContinue: () => setState(() => _step = 8),
               ),
             _ => _LocationStep(
                 shared: _position != null,
                 locating: _locating,
                 busy: _submitting,
                 onShare: _shareLocation,
-                onBack: () => setState(() => _step = 6),
+                onBack: () => setState(() => _step = 7),
                 onFinish: _submit,
               ),
           },
@@ -568,7 +576,7 @@ class _GenderStep extends StatelessWidget {
                 Text(t.genderStepTitle, style: CrushapText.title),
                 const SizedBox(height: 16),
                 for (final (value, label) in options) ...[
-                  _GenderOption(label: label, selected: selected == value, onTap: () => onSelect(value)),
+                  _SelectableOption(label: label, selected: selected == value, onTap: () => onSelect(value)),
                   const SizedBox(height: 10),
                 ],
               ],
@@ -586,8 +594,61 @@ class _GenderStep extends StatelessWidget {
   }
 }
 
-class _GenderOption extends StatelessWidget {
-  const _GenderOption({required this.label, required this.selected, required this.onTap});
+class _LookingForStep extends StatelessWidget {
+  const _LookingForStep({
+    required this.selected,
+    required this.onSelect,
+    required this.onBack,
+    required this.onContinue,
+  });
+
+  final String? selected;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onBack;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final options = [
+      ('relationship', t.lookingForRelationship),
+      ('casual', t.lookingForCasual),
+      ('friends', t.lookingForFriends),
+      ('unsure', t.lookingForUnsure),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BackRow(onBack: onBack),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(t.lookingForStepTitle, style: CrushapText.title),
+                const SizedBox(height: 16),
+                for (final (value, label) in options) ...[
+                  _SelectableOption(label: label, selected: selected == value, onTap: () => onSelect(value)),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+          ),
+        ),
+        CrushapButton(
+          label: t.continueLabel,
+          size: CrushapButtonSize.lg,
+          expand: true,
+          onPressed: selected == null ? null : onContinue,
+        ),
+      ],
+    );
+  }
+}
+
+class _SelectableOption extends StatelessWidget {
+  const _SelectableOption({required this.label, required this.selected, required this.onTap});
 
   final String label;
   final bool selected;
