@@ -39,7 +39,11 @@ class Profile {
     return Profile(
       id: j['id'] as String,
       name: j['name'] as String,
-      age: j['age'] as int,
+      // Tolerant on purpose, mirroring the server's tag parsing: one
+      // account with corrupted/missing legacy age data (e.g. from before
+      // the profile-save bug was fixed) must not throw and take the whole
+      // list — Discover, Matches, Likes, Search — down with it.
+      age: (j['age'] as num?)?.toInt() ?? 0,
       distanceKm: (j['distanceKm'] as num?)?.toDouble(),
       verified: j['verified'] as bool? ?? false,
       bio: j['bio'] as String? ?? '',

@@ -128,6 +128,7 @@ router.get('/discover', asyncHandler(async (req, res) => {
           users.distanceKm(req.userId, id),
         ]);
         if (!raw) return null;
+        if (!Number.isFinite(parseInt(raw.age, 10))) return null; // hard filter — broken/legacy data, not swipeable
         if (wantGender && raw.gender !== wantGender) return null; // hard filter
         if (friendsMode && raw.lookingFor !== 'friends') return null; // hard filter
         const tags = users.parseTags(raw).map((t) => t.toLowerCase());
