@@ -1,10 +1,11 @@
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../build_config.dart';
 
-/// Persisted "which server, which logged-in user" state. The server's
-/// address isn't known at build time (it's whatever VPS the user deploys
-/// to — see ../../DEPLOYMENT.md), so it's entered once in the app and
-/// stored locally, same as the auth token.
+/// Persisted "which server, which logged-in user" state. Most deploys bake
+/// their VPS address into the build (see BuildConfig) so this is filled in
+/// automatically; when it isn't (e.g. a dev build), it's entered once in
+/// the app and stored locally, same as the auth token.
 class Session {
   Session._(this._prefs);
 
@@ -16,7 +17,14 @@ class Session {
   static const _kLocale = 'locale_override';
 
   static Future<Session> load() async {
-    return Session._(await SharedPreferences.getInstance());
+    final prefs = await SharedPreferences.getInstance();
+    // Only adopt the baked-in default if the user hasn't already set (or
+    // explicitly cleared, e.g. via Profile → Server) a server of their own
+    // — this must never clobber a manual override.
+    if (prefs.getString(_kServerUrl) == null && BuildConfig.hasDefaultServerUrl) {
+      await prefs.setString(_kServerUrl, BuildConfig.defaultServerUrl);
+    }
+    return Session._(prefs);
   }
 
   String? get serverUrl => _prefs.getString(_kServerUrl);
@@ -73,4 +81,30 @@ class Session {
   bool getFlag(String key, {bool defaultValue = true}) => _prefs.getBool('flag_$key') ?? defaultValue;
 
   Future<void> setFlag(String key, bool value) => _prefs.setBool('flag_$key', value);
+
+  // Discover filters — deliberately nullable/unset until the user actually
+  // taps "Apply filters" once, so a fresh install never silently filters
+  // people out based on values nobody chose.
+  static const _kFilterMaxAge = 'filter_max_age';
+  static const _kFilterMaxDistanceKm = 'filter_max_distance_km';
+  static const _kFilterShowMe = 'filter_show_me';
+  static const _kFilterVerifiedOnly = 'filter_verified_only';
+
+  int? get filterMaxAge => _prefs.getInt(_kFilterMaxAge);
+  double? get filterMaxDistanceKm => _prefs.getDouble(_kFilterMaxDistanceKm);
+  /// One of 'women' / 'men' / 'everyone', or null (same as 'everyone').
+  String? get filterShowMe => _prefs.getString(_kFilterShowMe);
+  bool get filterVerifiedOnly => _prefs.getBool(_kFilterVerifiedOnly) ?? false;
+
+  Future<void> saveFilters({
+    required int maxAge,
+    required double maxDistanceKm,
+    required String showMe,
+    required bool verifiedOnly,
+  }) async {
+    await _prefs.setInt(_kFilterMaxAge, maxAge);
+    await _prefs.setDouble(_kFilterMaxDistanceKm, maxDistanceKm);
+    await _prefs.setString(_kFilterShowMe, showMe);
+    await _prefs.setBool(_kFilterVerifiedOnly, verifiedOnly);
+  }
 }

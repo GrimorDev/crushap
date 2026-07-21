@@ -50,6 +50,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  geolocator: ^14.0.3
 
 dev_dependencies:
   flutter_test:

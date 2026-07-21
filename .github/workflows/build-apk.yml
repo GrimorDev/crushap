@@ -34,7 +34,12 @@ jobs:
 
       - run: flutter test
 
-      - run: flutter build apk --release
+      # CRUSHAP_SERVER_URL (Settings → Secrets and variables → Actions →
+      # Variables, repo-level) bakes your deployed server's address into
+      # the APK so users never have to type it in by hand — see
+      # DEPLOYMENT.md "Baking in your server address". Safe to leave unset:
+      # the app just falls back to asking on first launch, like before.
+      - run: flutter build apk --release --dart-define=DEFAULT_SERVER_URL=${{ vars.CRUSHAP_SERVER_URL }}
 
       - uses: actions/upload-artifact@v4
         with:

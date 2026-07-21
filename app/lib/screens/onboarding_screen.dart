@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/widgets.dart';
 import '../constants.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../services/api_client.dart';
+import '../services/location_service.dart';
 import '../services/session.dart';
 import '../theme/colors.dart';
 import '../theme/effects.dart';
@@ -42,9 +44,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _ageController = TextEditingController();
+  String? _gender;
   final Set<String> _interests = {};
   Uint8List? _photoBytes;
   String? _photoName;
+  Position? _position;
+  bool _locating = false;
   bool _submitting = false;
   String? _error;
 
@@ -73,6 +78,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
+  Future<void> _shareLocation() async {
+    setState(() => _locating = true);
+    final position = await LocationService.getCurrentPosition();
+    if (mounted) {
+      setState(() {
+        _position = position;
+        _locating = false;
+      });
+    }
+  }
+
   Future<void> _submit() async {
     setState(() {
       _submitting = true;
@@ -86,6 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         password: _passwordController.text,
         age: int.parse(_ageController.text.trim()),
         tags: _interests.toList(),
+        gender: _gender,
       );
       await widget.session.setAuth(token: token, userId: me.id);
     } on ApiException catch (e) {
@@ -107,16 +124,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return;
     }
 
-    // The account now exists and is signed in — the photo is a nice-to-have
-    // from here on, so its failure must not strand the user back on the
-    // credentials step (retrying registration there would just fail with
-    // "email already exists", since the account was already created above).
+    // The account now exists and is signed in — the photo and location are
+    // both nice-to-haves from here on, so neither failing may strand the
+    // user back on the credentials step (retrying registration there would
+    // just fail with "email already exists", since the account already
+    // exists above).
     final bytes = _photoBytes;
     if (bytes != null) {
       try {
         await api.uploadPhoto(bytes, _photoName ?? 'photo.jpg');
       } catch (_) {
         // Ignore — the user can add a photo later from the profile screen.
+      }
+    }
+    final position = _position;
+    if (position != null) {
+      try {
+        await api.updateLocation(lat: position.latitude, lng: position.longitude);
+      } catch (_) {
+        // Ignore — distance/filtering just stays unavailable until they
+        // share it later (e.g. from Filters).
       }
     }
     if (mounted) widget.onDone();
@@ -154,17 +181,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onBack: () => setState(() => _step = 2),
                 onContinue: () => setState(() => _step = 4),
               ),
-            4 => _InterestsStep(
-                selected: _interests,
-                onToggle: _toggleInterest,
+            4 => _GenderStep(
+                selected: _gender,
+                onSelect: (g) => setState(() => _gender = g),
                 onBack: () => setState(() => _step = 3),
                 onContinue: () => setState(() => _step = 5),
               ),
-            _ => _PhotoStep(
-                photoBytes: _photoBytes,
-                busy: _submitting,
-                onPick: _pickPhoto,
+            5 => _InterestsStep(
+                selected: _interests,
+                onToggle: _toggleInterest,
                 onBack: () => setState(() => _step = 4),
+                onContinue: () => setState(() => _step = 6),
+              ),
+            6 => _PhotoStep(
+                photoBytes: _photoBytes,
+                onPick: _pickPhoto,
+                onBack: () => setState(() => _step = 5),
+                onContinue: () => setState(() => _step = 7),
+              ),
+            _ => _LocationStep(
+                shared: _position != null,
+                locating: _locating,
+                busy: _submitting,
+                onShare: _shareLocation,
+                onBack: () => setState(() => _step = 6),
                 onFinish: _submit,
               ),
           },
@@ -493,6 +533,89 @@ class _AgeStep extends StatelessWidget {
   }
 }
 
+class _GenderStep extends StatelessWidget {
+  const _GenderStep({
+    required this.selected,
+    required this.onSelect,
+    required this.onBack,
+    required this.onContinue,
+  });
+
+  final String? selected;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onBack;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    final options = [
+      ('woman', t.genderIdentityWoman),
+      ('man', t.genderIdentityMan),
+      ('nonbinary', t.genderIdentityNonBinary),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BackRow(onBack: onBack),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(t.genderStepTitle, style: CrushapText.title),
+                const SizedBox(height: 16),
+                for (final (value, label) in options) ...[
+                  _GenderOption(label: label, selected: selected == value, onTap: () => onSelect(value)),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+          ),
+        ),
+        CrushapButton(
+          label: t.continueLabel,
+          size: CrushapButtonSize.lg,
+          expand: true,
+          onPressed: selected == null ? null : onContinue,
+        ),
+      ],
+    );
+  }
+}
+
+class _GenderOption extends StatelessWidget {
+  const _GenderOption({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: CrushapEffects.durFast,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: selected ? CrushapColors.accentGlow : CrushapColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(CrushapRadii.lg),
+          border: Border.all(color: selected ? CrushapColors.accentPrimary : CrushapColors.borderSubtle),
+        ),
+        child: Row(
+          children: [
+            Expanded(child: Text(label, style: CrushapText.body)),
+            if (selected) const CrushapIcon('check', size: 18, color: CrushapColors.accentPrimary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InterestsStep extends StatelessWidget {
   const _InterestsStep({
     required this.selected,
@@ -551,17 +674,15 @@ class _InterestsStep extends StatelessWidget {
 class _PhotoStep extends StatelessWidget {
   const _PhotoStep({
     required this.photoBytes,
-    required this.busy,
     required this.onPick,
     required this.onBack,
-    required this.onFinish,
+    required this.onContinue,
   });
 
   final Uint8List? photoBytes;
-  final bool busy;
   final VoidCallback onPick;
   final VoidCallback onBack;
-  final VoidCallback onFinish;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -604,11 +725,86 @@ class _PhotoStep extends StatelessWidget {
           ),
         ),
         CrushapButton(
-          label: busy ? t.settingUpAccount : (bytes == null ? t.skipForNow : t.startSwiping),
+          label: bytes == null ? t.skipForNow : t.continueLabel,
           variant: bytes == null ? CrushapButtonVariant.ghost : CrushapButtonVariant.primary,
           size: CrushapButtonSize.lg,
           expand: true,
-          onPressed: busy ? null : onFinish,
+          onPressed: onContinue,
+        ),
+      ],
+    );
+  }
+}
+
+class _LocationStep extends StatelessWidget {
+  const _LocationStep({
+    required this.shared,
+    required this.locating,
+    required this.busy,
+    required this.onShare,
+    required this.onBack,
+    required this.onFinish,
+  });
+
+  final bool shared;
+  final bool locating;
+  final bool busy;
+  final VoidCallback onShare;
+  final VoidCallback onBack;
+  final VoidCallback onFinish;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _BackRow(onBack: onBack),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: shared ? CrushapColors.accentGlow : CrushapColors.surfaceCard,
+                  border: Border.all(color: shared ? CrushapColors.accentPrimary : CrushapColors.borderSubtle),
+                ),
+                child: CrushapIcon(
+                  'map-pin',
+                  size: 32,
+                  color: shared ? CrushapColors.accentPrimary : CrushapColors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(t.locationStepTitle, style: CrushapText.title, textAlign: TextAlign.center),
+              const SizedBox(height: 8),
+              Text(
+                shared ? t.locationSharedConfirmation : t.locationStepSubtitle,
+                textAlign: TextAlign.center,
+                style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        if (!shared) ...[
+          CrushapButton(
+            label: locating ? t.locatingLabel : t.shareMyLocation,
+            size: CrushapButtonSize.lg,
+            expand: true,
+            onPressed: locating ? null : onShare,
+          ),
+          const SizedBox(height: 12),
+        ],
+        CrushapButton(
+          label: busy ? t.settingUpAccount : (shared ? t.startSwiping : t.skipForNow),
+          variant: shared ? CrushapButtonVariant.primary : CrushapButtonVariant.ghost,
+          size: CrushapButtonSize.lg,
+          expand: true,
+          onPressed: busy || locating ? null : onFinish,
         ),
       ],
     );

@@ -20,9 +20,22 @@ This repo's root `docker-compose.yml` is a two-service stack:
 
 To pick up new commits later, use Portainer's **Pull and redeploy** (or **Update the stack** → *Re-pull image and redeploy*) on the stack.
 
-## Pointing the app at your server
+## Baking in your server address (recommended)
 
-The Flutter app doesn't have your VPS IP baked in — it asks once, on first launch (and it's editable later from Profile → Server). Enter:
+By default the app asks each user to type in your server's address on
+first launch — fine for testing, not something to hand real users. Set it
+once and every APK the GitHub Actions workflow builds from then on has it
+baked in, with the manual entry screen skipped entirely:
+
+1. On GitHub: your repo → **Settings** → **Secrets and variables** → **Actions** → **Variables** tab → **New repository variable**.
+2. Name: `CRUSHAP_SERVER_URL`. Value: `http://<your-vps-ip>:3000` (same address as below).
+3. Push anything to `main` (or re-run the *Build Android APK* workflow manually) to get a new APK with it baked in.
+
+It's still overridable per-device from **Profile → Server**, e.g. for pointing a dev build at a different backend — baking in a default doesn't remove that option, it just means nobody has to use it unless they want to.
+
+## Pointing the app at your server manually
+
+If you haven't set `CRUSHAP_SERVER_URL` (see above), the app asks once, on first launch (and it's editable later from Profile → Server). Enter:
 
 ```
 http://<your-vps-ip>:3000

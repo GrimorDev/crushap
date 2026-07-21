@@ -40,6 +40,17 @@ class MatchEntry {
   final String? lastMessageText;
 }
 
+/// Mirrors the query params /api/discover understands. `showMe` is one of
+/// 'women' / 'men' / 'everyone' (or null, same as 'everyone' — no filter).
+class DiscoverFilters {
+  const DiscoverFilters({this.maxAge, this.maxDistanceKm, this.verifiedOnly = false, this.showMe});
+
+  final int? maxAge;
+  final double? maxDistanceKm;
+  final bool verifiedOnly;
+  final String? showMe;
+}
+
 /// Thin REST client for the crushap-server API (see server/README.md).
 /// Every call reads the current base URL / token from [session] so a
 /// server-address or login change takes effect immediately, with no client
@@ -88,11 +99,20 @@ class ApiClient {
     required int age,
     String? bio,
     List<String>? tags,
+    String? gender,
   }) async {
     final res = await http.post(
       _uri('/api/auth/register'),
       headers: _headers(),
-      body: jsonEncode({'name': name, 'email': email, 'password': password, 'age': age, 'bio': bio, 'tags': tags}),
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+        'age': age,
+        'bio': bio,
+        'tags': tags,
+        'gender': gender,
+      }),
     );
     final body = await _decode(res);
     return (body['token'] as String, Profile.fromJson(body['user'] as Map<String, dynamic>));
@@ -114,7 +134,15 @@ class ApiClient {
     return Profile.fromJson(body['user'] as Map<String, dynamic>);
   }
 
-  Future<Profile> updateMe({String? name, String? bio, int? age, List<String>? tags}) async {
+  Future<Profile> updateMe({
+    String? name,
+    String? bio,
+    int? age,
+    List<String>? tags,
+    String? gender,
+    double? lat,
+    double? lng,
+  }) async {
     // Only send fields that actually changed — sending an explicit `null`
     // for the rest would overwrite them server-side (PATCH is a partial
     // update; a present-but-null key looks like "clear this field").
@@ -123,10 +151,20 @@ class ApiClient {
       'bio': ?bio,
       'age': ?age,
       'tags': ?tags,
+      'gender': ?gender,
+      'lat': ?lat,
+      'lng': ?lng,
     };
     final res = await http.patch(_uri('/api/me'), headers: _headers(), body: jsonEncode(fields));
     final body = await _decode(res);
     return Profile.fromJson(body['user'] as Map<String, dynamic>);
+  }
+
+  /// Fire-and-forget-ish location update — a thin wrapper over updateMe so
+  /// callers that only want to push a fresh GPS fix don't need to know
+  /// updateMe's full signature.
+  Future<void> updateLocation({required double lat, required double lng}) async {
+    await updateMe(lat: lat, lng: lng);
   }
 
   /// Takes raw bytes (not a `dart:io` File) so this works from an XFile on
@@ -147,8 +185,25 @@ class ApiClient {
     return body['url'] as String;
   }
 
-  Future<List<Profile>> discover() async {
-    final res = await http.get(_uri('/api/discover'), headers: _headers());
+  Future<void> deletePhoto(String url) async {
+    final req = http.Request('DELETE', _uri('/api/me/photos'));
+    req.headers.addAll(_headers());
+    req.body = jsonEncode({'url': url});
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    await _decode(res);
+  }
+
+  Future<List<Profile>> discover({DiscoverFilters? filters}) async {
+    final query = <String, String>{};
+    if (filters != null) {
+      if (filters.maxAge != null) query['maxAge'] = filters.maxAge!.toString();
+      if (filters.maxDistanceKm != null) query['maxDistanceKm'] = filters.maxDistanceKm!.toString();
+      if (filters.verifiedOnly) query['verifiedOnly'] = 'true';
+      if (filters.showMe != null) query['showMe'] = filters.showMe!;
+    }
+    final res = await http.get(_uri('/api/discover', query.isEmpty ? null : query), headers: _headers());
     final body = await _decode(res);
     return (body['profiles'] as List).map((e) => Profile.fromJson(e as Map<String, dynamic>)).toList();
   }

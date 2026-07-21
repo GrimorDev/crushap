@@ -58,6 +58,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Duration _animDuration = Duration.zero;
   VoidCallback? _pendingAfterAnim;
   bool _busy = false;
+  int _photoIndex = 0;
 
   @override
   void initState() {
@@ -71,10 +72,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       _loadError = null;
     });
     try {
-      final profiles = await widget.api.discover();
+      final session = widget.api.session;
+      final profiles = await widget.api.discover(
+        filters: DiscoverFilters(
+          maxAge: session.filterMaxAge,
+          maxDistanceKm: session.filterMaxDistanceKm,
+          showMe: session.filterShowMe,
+          verifiedOnly: session.filterVerifiedOnly,
+        ),
+      );
       setState(() {
         _deck = profiles;
         _idx = 0;
+        _photoIndex = 0;
         _loading = false;
       });
     } on ApiException catch (e) {
@@ -112,6 +122,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     if (!mounted) return;
     setState(() {
       _idx++;
+      _photoIndex = 0;
       _drag = Offset.zero;
       _animDuration = Duration.zero;
       _busy = false;
@@ -128,6 +139,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         // _idx stays put — the undone profile is reinserted right at it.
         _deck.insert(_idx, target);
         _lastSwiped = null;
+        _photoIndex = 0;
       });
     } catch (_) {
       // Nothing to undo server-side (already matched from the other angle,
@@ -327,9 +339,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 age: current.age,
                 distance: current.distanceValue == null ? null : t.distanceAwayKm(current.distanceValue!),
                 verified: current.verified,
+                verifiedLabel: t.verifiedBadge,
                 bio: current.bio,
                 tags: current.tags,
-                photoUrl: widget.api.mediaUrl(current.photos.isNotEmpty ? current.photos.first : null),
+                photoUrls: [for (final p in current.photos) widget.api.mediaUrl(p)!],
+                photoIndex: _photoIndex,
+                onTapPhoto: (forward) => setState(() {
+                  final count = current.photos.length;
+                  _photoIndex = (_photoIndex + (forward ? 1 : -1)).clamp(0, count - 1);
+                }),
                 width: 340,
                 height: 440,
               ),

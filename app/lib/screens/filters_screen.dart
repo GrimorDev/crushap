@@ -1,5 +1,8 @@
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
+import '../services/api_client.dart';
+import '../services/location_service.dart';
+import '../services/session.dart';
 import '../theme/colors.dart';
 import '../theme/effects.dart';
 import '../theme/spacing.dart';
@@ -10,13 +13,19 @@ import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
 import '../widgets/core/app_switch.dart';
 
+const _showMeValues = ['women', 'men', 'everyone'];
+
 /// Ported from ui_kits/dating-app/FiltersScreen.jsx. The distance/age
 /// sliders and the verified-only toggle are hand-rolled in the source
 /// (plain `<input type="range">` / a raw div), not shared design-system
-/// components, so they stay private to this screen here too.
+/// components, so they stay private to this screen here too. Now backed by
+/// real state: choices persist (Session) and actually filter `/api/discover`
+/// server-side instead of just closing the sheet.
 class FiltersScreen extends StatefulWidget {
-  const FiltersScreen({super.key, required this.onClose});
+  const FiltersScreen({super.key, required this.session, required this.api, required this.onClose});
 
+  final Session session;
+  final ApiClient api;
   final VoidCallback onClose;
 
   @override
@@ -24,10 +33,36 @@ class FiltersScreen extends StatefulWidget {
 }
 
 class _FiltersScreenState extends State<FiltersScreen> {
-  double _maxAge = 35;
-  double _distance = 25;
-  int _showMe = 2; // 0 Women, 1 Men, 2 Everyone
-  bool _verifiedOnly = true;
+  late double _maxAge = (widget.session.filterMaxAge ?? 35).toDouble();
+  late double _distance = widget.session.filterMaxDistanceKm ?? 25;
+  late int _showMe = _showMeValues.indexOf(widget.session.filterShowMe ?? 'everyone').clamp(0, 2);
+  late bool _verifiedOnly = widget.session.filterVerifiedOnly;
+  bool _locating = false;
+  bool _locationRefreshed = false;
+
+  Future<void> _apply() async {
+    await widget.session.saveFilters(
+      maxAge: _maxAge.round(),
+      maxDistanceKm: _distance,
+      showMe: _showMeValues[_showMe],
+      verifiedOnly: _verifiedOnly,
+    );
+    if (mounted) widget.onClose();
+  }
+
+  Future<void> _refreshLocation() async {
+    setState(() => _locating = true);
+    final position = await LocationService.getCurrentPosition();
+    if (position != null) {
+      try {
+        await widget.api.updateLocation(lat: position.latitude, lng: position.longitude);
+        if (mounted) setState(() => _locationRefreshed = true);
+      } catch (_) {
+        // Leave _locationRefreshed false — the row just stays actionable.
+      }
+    }
+    if (mounted) setState(() => _locating = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +146,29 @@ class _FiltersScreenState extends State<FiltersScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 28),
+                    GestureDetector(
+                      onTap: (_locating || _locationRefreshed) ? null : _refreshLocation,
+                      behavior: HitTestBehavior.opaque,
+                      child: Row(
+                        children: [
+                          CrushapIcon(
+                            'map-pin',
+                            size: 18,
+                            color: _locationRefreshed ? CrushapColors.green1 : CrushapColors.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _locating
+                                ? t.locatingLabel
+                                : _locationRefreshed
+                                    ? t.locationSharedConfirmation
+                                    : t.refreshMyLocation,
+                            style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -121,7 +179,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
                 label: t.applyFilters,
                 size: CrushapButtonSize.lg,
                 expand: true,
-                onPressed: widget.onClose,
+                onPressed: _apply,
               ),
             ),
           ],

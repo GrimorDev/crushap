@@ -8,12 +8,12 @@ import '../models/profile.dart';
 import '../services/api_client.dart';
 import '../services/session.dart';
 import '../theme/colors.dart';
+import '../theme/spacing.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_badge.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
-import '../widgets/core/app_icon_button.dart';
 import '../widgets/core/language_sheet.dart';
 import '../widgets/core/photo_source_sheet.dart';
 import '../widgets/forms/app_input.dart';
@@ -51,13 +51,17 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+const _kMaxPhotos = 6;
+
 class _ProfileScreenState extends State<ProfileScreen> {
   Profile? _me;
   bool _editing = false;
   bool _saving = false;
   bool _uploadingPhoto = false;
+  String? _deletingPhotoUrl;
   late final _bioController = TextEditingController();
   final Set<String> _editTags = {};
+  String? _editGender;
 
   @override
   void initState() {
@@ -87,13 +91,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _editTags
       ..clear()
       ..addAll(me.tags);
+    _editGender = me.gender;
     setState(() => _editing = true);
   }
 
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final updated = await widget.api.updateMe(bio: _bioController.text.trim(), tags: _editTags.toList());
+      final updated = await widget.api.updateMe(
+        bio: _bioController.text.trim(),
+        tags: _editTags.toList(),
+        gender: _editGender,
+      );
       setState(() {
         _me = updated;
         _editing = false;
@@ -106,6 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickPhoto() async {
+    if ((_me?.photos.length ?? 0) >= _kMaxPhotos) return;
     final source = await showPhotoSourceSheet(context);
     if (source == null) return;
     final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
@@ -116,9 +126,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await widget.api.uploadPhoto(bytes, file.name);
       await _load();
     } catch (_) {
-      // Ignore — the avatar just stays whatever it was.
+      // Ignore — the gallery just stays whatever it was.
     } finally {
       if (mounted) setState(() => _uploadingPhoto = false);
+    }
+  }
+
+  Future<void> _removePhoto(String url) async {
+    setState(() => _deletingPhotoUrl = url);
+    try {
+      await widget.api.deletePhoto(url);
+      await _load();
+    } catch (_) {
+      // Leave it in place — the user can retry.
+    } finally {
+      if (mounted) setState(() => _deletingPhotoUrl = null);
     }
   }
 
@@ -146,53 +168,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Column(
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              GestureDetector(
-                                onTap: _pickPhoto,
-                                child: Container(
-                                  width: 112,
-                                  height: 112,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: CrushapColors.surfaceCard,
-                                    border: Border.all(color: CrushapColors.borderSubtle),
-                                    image: me.photos.isEmpty
-                                        ? null
-                                        : DecorationImage(
-                                            image: NetworkImage(widget.api.mediaUrl(me.photos.first)!),
-                                            fit: BoxFit.cover,
-                                          ),
-                                  ),
-                                  child: me.photos.isEmpty
-                                      ? const CrushapIcon('image', size: 32, color: CrushapColors.textTertiary)
-                                      : null,
+                              Text('${me.name}, ${me.age}', style: CrushapText.displayMd),
+                              if (me.verified) ...[
+                                const SizedBox(width: 8),
+                                CrushapBadge(
+                                  label: t.verifiedBadge,
+                                  variant: CrushapBadgeVariant.verified,
+                                  icon: const CrushapIcon('shield-check', size: 12),
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text('${me.name}, ${me.age}', style: CrushapText.displayMd),
-                                  if (me.verified) ...[
-                                    const SizedBox(width: 8),
-                                    CrushapBadge(
-                                      label: t.verifiedBadge,
-                                      variant: CrushapBadgeVariant.verified,
-                                      icon: const CrushapIcon('shield-check', size: 12),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              CrushapIconButton(
-                                icon: 'camera',
-                                label: t.editPhotoLabel,
-                                variant: CrushapIconButtonVariant.surface,
-                                onPressed: _uploadingPhoto ? null : _pickPhoto,
-                              ),
+                              ],
                             ],
+                          ),
+                          const SizedBox(height: 16),
+                          _PhotoGallery(
+                            photos: [for (final p in me.photos) (raw: p, display: widget.api.mediaUrl(p)!)],
+                            uploading: _uploadingPhoto,
+                            deletingUrl: _deletingPhotoUrl,
+                            onAdd: _pickPhoto,
+                            onRemove: _removePhoto,
+                            addLabel: t.addPhotoLabel,
+                            removeLabel: t.removePhotoLabel,
                           ),
                           const SizedBox(height: 28),
                           if (_editing) ..._buildEditor(t) else ..._buildReadonly(me, t),
@@ -224,6 +222,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
       ),
       const SizedBox(height: 24),
+      _SectionLabel(t.genderSection),
+      const SizedBox(height: 10),
+      Text(
+        me.gender == null ? t.genderNotSet : _genderLabel(t, me.gender!),
+        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+      ),
+      const SizedBox(height: 24),
       _SectionLabel(t.interestsSection),
       const SizedBox(height: 10),
       me.tags.isEmpty
@@ -236,11 +241,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ];
   }
 
+  String _genderLabel(AppLocalizations t, String value) => switch (value) {
+        'woman' => t.genderIdentityWoman,
+        'man' => t.genderIdentityMan,
+        _ => t.genderIdentityNonBinary,
+      };
+
   List<Widget> _buildEditor(AppLocalizations t) {
     return [
       _SectionLabel(t.aboutSection),
       const SizedBox(height: 10),
       CrushapInput(controller: _bioController, placeholder: t.bioEditPlaceholder),
+      const SizedBox(height: 24),
+      _SectionLabel(t.genderSection),
+      const SizedBox(height: 10),
+      StatefulBuilder(
+        builder: (context, setInner) => Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final value in const ['woman', 'man', 'nonbinary'])
+              CrushapChip(
+                label: _genderLabel(t, value),
+                selected: _editGender == value,
+                onTap: () => setInner(() => _editGender = value),
+              ),
+          ],
+        ),
+      ),
       const SizedBox(height: 24),
       _SectionLabel(t.interestsSection),
       const SizedBox(height: 10),
@@ -325,6 +353,126 @@ class _SettingsRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+typedef _PhotoEntry = ({String raw, String display});
+
+/// Horizontal row of up to [_kMaxPhotos] thumbnails (first one doubles as
+/// the profile's primary/avatar photo — order matters, same as Discover's
+/// swipe card and matches use `photos.first`) plus an "add" tile. Replaces
+/// the old single circular avatar so a profile can carry more than one
+/// photo, per DEPLOYMENT.md-adjacent product feedback that one photo isn't
+/// enough to compete on a serious dating app.
+class _PhotoGallery extends StatelessWidget {
+  const _PhotoGallery({
+    required this.photos,
+    required this.uploading,
+    required this.deletingUrl,
+    required this.onAdd,
+    required this.onRemove,
+    required this.addLabel,
+    required this.removeLabel,
+  });
+
+  final List<_PhotoEntry> photos;
+  final bool uploading;
+  final String? deletingUrl;
+  final VoidCallback onAdd;
+  final ValueChanged<String> onRemove;
+  final String addLabel;
+  final String removeLabel;
+
+  static const _tile = 88.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final canAddMore = photos.length < _kMaxPhotos;
+    return SizedBox(
+      height: _tile,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: photos.length + (canAddMore ? 1 : 0),
+        separatorBuilder: (context, i) => const SizedBox(width: 10),
+        itemBuilder: (context, i) {
+          if (i == photos.length) {
+            return GestureDetector(
+              onTap: uploading ? null : onAdd,
+              child: Container(
+                width: _tile,
+                height: _tile,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: CrushapColors.surfaceCard,
+                  borderRadius: BorderRadius.circular(CrushapRadii.lg),
+                  border: Border.all(color: CrushapColors.borderSubtle),
+                ),
+                child: uploading
+                    ? const CrushapIcon('camera', size: 22, color: CrushapColors.textTertiary)
+                    : Semantics(
+                        label: addLabel,
+                        button: true,
+                        // The icon set has no dedicated "plus" glyph; a
+                        // 45°-rotated X (two crossed diagonals) is a plus.
+                        child: Transform.rotate(
+                          angle: math.pi / 4,
+                          child: const CrushapIcon('x', size: 22, color: CrushapColors.textTertiary),
+                        ),
+                      ),
+              ),
+            );
+          }
+          final entry = photos[i];
+          final deleting = deletingUrl == entry.raw;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: _tile,
+                height: _tile,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(CrushapRadii.lg),
+                  border: i == 0 ? Border.all(color: CrushapColors.accentPrimary, width: 2) : null,
+                  image: DecorationImage(image: NetworkImage(entry.display), fit: BoxFit.cover),
+                ),
+              ),
+              if (deleting)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: CrushapColors.overlayScrim,
+                      borderRadius: BorderRadius.circular(CrushapRadii.lg),
+                    ),
+                  ),
+                ),
+              if (!deleting)
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  child: GestureDetector(
+                    onTap: () => onRemove(entry.raw),
+                    child: Semantics(
+                      label: removeLabel,
+                      button: true,
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: CrushapColors.surfaceApp,
+                          shape: BoxShape.circle,
+                          border: Border.fromBorderSide(BorderSide(color: CrushapColors.borderStrong)),
+                        ),
+                        child: const CrushapIcon('x', size: 11, color: CrushapColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

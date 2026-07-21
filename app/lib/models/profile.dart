@@ -10,6 +10,7 @@ class Profile {
     this.verified = false,
     required this.bio,
     required this.tags,
+    this.gender,
     this.photos = const [],
   });
 
@@ -20,6 +21,9 @@ class Profile {
   final bool verified;
   final String bio;
   final List<String> tags;
+  /// One of 'woman' / 'man' / 'nonbinary', or null for accounts created
+  /// before this field existed (or who skipped it, if that's ever allowed).
+  final String? gender;
   final List<String> photos;
 
   /// Formatted distance value only — the "X km away" phrasing is locale-
@@ -36,6 +40,7 @@ class Profile {
       verified: j['verified'] as bool? ?? false,
       bio: j['bio'] as String? ?? '',
       tags: (j['tags'] as List?)?.map((e) => e as String).toList() ?? const [],
+      gender: j['gender'] as String?,
       photos: (j['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
     );
   }

@@ -230,6 +230,30 @@ abstract class AppLocalizations {
   /// **'Age'**
   String get agePlaceholder;
 
+  /// No description provided for @genderStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Which best describes you?'**
+  String get genderStepTitle;
+
+  /// No description provided for @genderIdentityWoman.
+  ///
+  /// In en, this message translates to:
+  /// **'Woman'**
+  String get genderIdentityWoman;
+
+  /// No description provided for @genderIdentityMan.
+  ///
+  /// In en, this message translates to:
+  /// **'Man'**
+  String get genderIdentityMan;
+
+  /// No description provided for @genderIdentityNonBinary.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-binary'**
+  String get genderIdentityNonBinary;
+
   /// No description provided for @interestsStepTitle.
   ///
   /// In en, this message translates to:
@@ -265,6 +289,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Setting up your account…'**
   String get settingUpAccount;
+
+  /// No description provided for @locationStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your location'**
+  String get locationStepTitle;
+
+  /// No description provided for @locationStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See real distances to people nearby, and use the distance filter — this is never shared as an exact address, just used to calculate distance.'**
+  String get locationStepSubtitle;
+
+  /// No description provided for @locationSharedConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it — distances will be shown accurately.'**
+  String get locationSharedConfirmation;
+
+  /// No description provided for @shareMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my location'**
+  String get shareMyLocation;
+
+  /// No description provided for @locatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Locating…'**
+  String get locatingLabel;
 
   /// No description provided for @welcomeBack.
   ///
@@ -470,6 +524,12 @@ abstract class AppLocalizations {
   /// **'Verified profiles only'**
   String get verifiedProfilesOnly;
 
+  /// No description provided for @refreshMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh my location'**
+  String get refreshMyLocation;
+
   /// No description provided for @applyFilters.
   ///
   /// In en, this message translates to:
@@ -548,6 +608,18 @@ abstract class AppLocalizations {
   /// **'Add a bio so people know a little about you.'**
   String get addBioPrompt;
 
+  /// No description provided for @genderSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get genderSection;
+
+  /// No description provided for @genderNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set yet — tap Edit profile to add it.'**
+  String get genderNotSet;
+
   /// No description provided for @interestsSection.
   ///
   /// In en, this message translates to:
@@ -619,6 +691,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit photo'**
   String get editPhotoLabel;
+
+  /// No description provided for @addPhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get addPhotoLabel;
+
+  /// No description provided for @removePhotoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get removePhotoLabel;
 
   /// No description provided for @verifiedBadge.
   ///

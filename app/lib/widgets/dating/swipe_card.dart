@@ -8,9 +8,11 @@ import '../core/app_icon.dart';
 
 /// Ported from components/dating/SwipeCard.jsx.
 ///
-/// Shows the user's uploaded photo (`photoUrl`) when there is one; falls
-/// back to the same placeholder tile the original design system used when
-/// no photography was available at all.
+/// Shows the candidate's uploaded photos (`photoUrls`), cycled via tap zones
+/// (left third = previous, right two-thirds = next — same convention as
+/// Instagram Stories/Tinder) when there's more than one; falls back to the
+/// same placeholder tile the original design system used when no
+/// photography was available at all.
 class CrushapSwipeCard extends StatelessWidget {
   const CrushapSwipeCard({
     super.key,
@@ -18,9 +20,12 @@ class CrushapSwipeCard extends StatelessWidget {
     required this.age,
     this.distance,
     this.verified = false,
+    this.verifiedLabel = 'Verified',
     this.bio,
     this.tags = const [],
-    this.photoUrl,
+    this.photoUrls = const [],
+    this.photoIndex = 0,
+    this.onTapPhoto,
     this.width = 340,
     this.height = 460,
   });
@@ -29,14 +34,21 @@ class CrushapSwipeCard extends StatelessWidget {
   final int age;
   final String? distance;
   final bool verified;
+  final String verifiedLabel;
   final String? bio;
   final List<String> tags;
-  final String? photoUrl;
+  final List<String> photoUrls;
+  final int photoIndex;
+  /// `true` to advance forward, `false` to go back — only called when
+  /// there's more than one photo to cycle through.
+  final ValueChanged<bool>? onTapPhoto;
   final double width;
   final double height;
 
   @override
   Widget build(BuildContext context) {
+    final index = photoIndex.clamp(0, photoUrls.isEmpty ? 0 : photoUrls.length - 1);
+    final photoUrl = photoUrls.isEmpty ? null : photoUrls[index];
     return Container(
       width: width,
       height: height,
@@ -51,23 +63,51 @@ class CrushapSwipeCard extends StatelessWidget {
         children: [
           if (photoUrl != null)
             Image.network(
-              photoUrl!,
+              photoUrl,
+              key: ValueKey(photoUrl),
               fit: BoxFit.cover,
               errorBuilder: (context, error, stack) => const _PhotoPlaceholder(),
               loadingBuilder: (context, child, progress) => progress == null ? child : const _PhotoPlaceholder(),
             )
           else
             const _PhotoPlaceholder(),
+          if (photoUrls.length > 1)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: (d) => onTapPhoto?.call(d.localPosition.dx > width / 3),
+            ),
           // Bottom scrim for text legibility.
           const DecoratedBox(
             decoration: BoxDecoration(gradient: CrushapColors.gradientScrimBottom),
           ),
+          if (photoUrls.length > 1)
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Row(
+                children: [
+                  for (final (i, _) in photoUrls.indexed) ...[
+                    if (i > 0) const SizedBox(width: 4),
+                    Expanded(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: i <= index ? const Color(0xFFFFFFFF) : const Color(0x4DFFFFFF),
+                          borderRadius: BorderRadius.circular(CrushapRadii.pill),
+                        ),
+                        child: const SizedBox(height: 3),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           if (verified)
             Positioned(
               top: 16,
               right: 16,
               child: CrushapBadge(
-                label: 'Verified',
+                label: verifiedLabel,
                 variant: CrushapBadgeVariant.verified,
                 icon: const CrushapIcon('shield-check', size: 12),
               ),

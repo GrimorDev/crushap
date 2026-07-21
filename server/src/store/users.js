@@ -5,7 +5,7 @@ const emailKey = (email) => `email:index:${email.toLowerCase().trim()}`;
 const userKey = (id) => `user:${id}`;
 const photosKey = (id) => `user:${id}:photos`;
 
-async function createUser({ name, email, passwordHash, age, bio, tags }) {
+async function createUser({ name, email, passwordHash, age, bio, tags, gender }) {
   const id = uuid();
   await redis.hset(userKey(id), {
     id,
@@ -15,6 +15,7 @@ async function createUser({ name, email, passwordHash, age, bio, tags }) {
     age: String(age),
     bio: bio || '',
     tags: JSON.stringify(tags || []),
+    gender: gender || '',
     verified: '0',
     createdAt: String(Date.now()),
   });
@@ -42,6 +43,7 @@ async function updateUser(id, fields) {
   if (fields.bio != null) patch.bio = fields.bio;
   if (fields.age != null) patch.age = String(fields.age);
   if (fields.tags != null) patch.tags = JSON.stringify(fields.tags);
+  if (fields.gender != null) patch.gender = fields.gender;
   if (Object.keys(patch).length) await redis.hset(userKey(id), patch);
   if (fields.lat != null && fields.lng != null) {
     await redis.geoadd('geo:users', fields.lng, fields.lat, id);
@@ -50,6 +52,10 @@ async function updateUser(id, fields) {
 
 async function addPhoto(id, url) {
   await redis.rpush(photosKey(id), url);
+}
+
+async function removePhoto(id, url) {
+  await redis.lrem(photosKey(id), 0, url);
 }
 
 async function getPhotos(id) {
@@ -74,6 +80,7 @@ function toPublicProfile(raw, { photos = [], distance = null } = {}) {
     age: parseInt(raw.age, 10),
     bio: raw.bio || '',
     tags: JSON.parse(raw.tags || '[]'),
+    gender: raw.gender || null,
     verified: raw.verified === '1',
     photos,
     distanceKm: distance,
@@ -86,6 +93,7 @@ module.exports = {
   getUserRaw,
   updateUser,
   addPhoto,
+  removePhoto,
   getPhotos,
   allUserIds,
   distanceKm,

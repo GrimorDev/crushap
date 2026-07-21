@@ -80,6 +80,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get agePlaceholder => 'Age';
 
   @override
+  String get genderStepTitle => 'Which best describes you?';
+
+  @override
+  String get genderIdentityWoman => 'Woman';
+
+  @override
+  String get genderIdentityMan => 'Man';
+
+  @override
+  String get genderIdentityNonBinary => 'Non-binary';
+
+  @override
   String get interestsStepTitle => 'Pick a few interests';
 
   @override
@@ -97,6 +109,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingUpAccount => 'Setting up your account…';
+
+  @override
+  String get locationStepTitle => 'Share your location';
+
+  @override
+  String get locationStepSubtitle =>
+      'See real distances to people nearby, and use the distance filter — this is never shared as an exact address, just used to calculate distance.';
+
+  @override
+  String get locationSharedConfirmation =>
+      'Got it — distances will be shown accurately.';
+
+  @override
+  String get shareMyLocation => 'Share my location';
+
+  @override
+  String get locatingLabel => 'Locating…';
 
   @override
   String get welcomeBack => 'Welcome back';
@@ -208,6 +237,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verifiedProfilesOnly => 'Verified profiles only';
 
   @override
+  String get refreshMyLocation => 'Refresh my location';
+
+  @override
   String get applyFilters => 'Apply filters';
 
   @override
@@ -251,6 +283,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addBioPrompt => 'Add a bio so people know a little about you.';
 
   @override
+  String get genderSection => 'Gender';
+
+  @override
+  String get genderNotSet => 'Not set yet — tap Edit profile to add it.';
+
+  @override
   String get interestsSection => 'Interests';
 
   @override
@@ -285,6 +323,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editPhotoLabel => 'Edit photo';
+
+  @override
+  String get addPhotoLabel => 'Add photo';
+
+  @override
+  String get removePhotoLabel => 'Remove photo';
 
   @override
   String get verifiedBadge => 'Verified';

@@ -39,6 +39,10 @@ class _CrushapAppState extends State<CrushapApp> {
   bool _showLogin = false;
   CrushapNavTab _tab = CrushapNavTab.discover;
   Profile? _pendingMatch;
+  // Bumped whenever Filters is closed so DiscoverScreen (keyed on this)
+  // fully remounts and re-fetches with whatever filters were just saved —
+  // its own State has no other way to know they changed underneath it.
+  int _filtersVersion = 0;
 
   // This State's own `context` sits ABOVE the MaterialApp it builds (and
   // therefore above the Navigator MaterialApp creates around `home`), so
@@ -87,10 +91,17 @@ class _CrushapAppState extends State<CrushapApp> {
     );
   }
 
-  void _openFilters() {
-    _navigatorKey.currentState!.push(
-      MaterialPageRoute(builder: (_) => FiltersScreen(onClose: () => _navigatorKey.currentState!.pop())),
+  Future<void> _openFilters() async {
+    await _navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => FiltersScreen(
+          session: _session!,
+          api: _api!,
+          onClose: () => _navigatorKey.currentState!.pop(),
+        ),
+      ),
     );
+    if (mounted) setState(() => _filtersVersion++);
   }
 
   void _openServerSettings() {
@@ -182,6 +193,7 @@ class _CrushapAppState extends State<CrushapApp> {
 
     final Widget mainScreen = switch (_tab) {
       CrushapNavTab.discover => DiscoverScreen(
+          key: ValueKey('discover-$_filtersVersion'),
           api: api,
           onMatch: _onMatch,
           onOpenFilters: _openFilters,

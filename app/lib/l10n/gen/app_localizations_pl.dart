@@ -81,6 +81,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get agePlaceholder => 'Wiek';
 
   @override
+  String get genderStepTitle => 'Co najlepiej Cię opisuje?';
+
+  @override
+  String get genderIdentityWoman => 'Kobieta';
+
+  @override
+  String get genderIdentityMan => 'Mężczyzna';
+
+  @override
+  String get genderIdentityNonBinary => 'Niebinarna/-y';
+
+  @override
   String get interestsStepTitle => 'Wybierz kilka zainteresowań';
 
   @override
@@ -98,6 +110,23 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get settingUpAccount => 'Konfigurowanie konta…';
+
+  @override
+  String get locationStepTitle => 'Udostępnij lokalizację';
+
+  @override
+  String get locationStepSubtitle =>
+      'Zobacz prawdziwe odległości do osób w pobliżu i korzystaj z filtra odległości — to nigdy nie jest udostępniane jako dokładny adres, tylko używane do obliczenia dystansu.';
+
+  @override
+  String get locationSharedConfirmation =>
+      'Gotowe — odległości będą wyświetlane dokładnie.';
+
+  @override
+  String get shareMyLocation => 'Udostępnij lokalizację';
+
+  @override
+  String get locatingLabel => 'Lokalizowanie…';
 
   @override
   String get welcomeBack => 'Witaj ponownie';
@@ -210,6 +239,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get verifiedProfilesOnly => 'Tylko zweryfikowane profile';
 
   @override
+  String get refreshMyLocation => 'Odśwież moją lokalizację';
+
+  @override
   String get applyFilters => 'Zastosuj filtry';
 
   @override
@@ -253,6 +285,13 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addBioPrompt => 'Dodaj opis, żeby inni mogli Cię lepiej poznać.';
 
   @override
+  String get genderSection => 'Płeć';
+
+  @override
+  String get genderNotSet =>
+      'Jeszcze nie ustawiono — dotknij „Edytuj profil”, aby dodać.';
+
+  @override
   String get interestsSection => 'Zainteresowania';
 
   @override
@@ -287,6 +326,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get editPhotoLabel => 'Zmień zdjęcie';
+
+  @override
+  String get addPhotoLabel => 'Dodaj zdjęcie';
+
+  @override
+  String get removePhotoLabel => 'Usuń zdjęcie';
 
   @override
   String get verifiedBadge => 'Zweryfikowany';
