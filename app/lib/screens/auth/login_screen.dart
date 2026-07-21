@@ -5,6 +5,7 @@ import '../../services/session.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../../widgets/core/app_button.dart';
+import '../../widgets/core/app_icon.dart';
 import '../../widgets/forms/app_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -63,7 +64,12 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CrushapButton(label: t.backWithArrow, variant: CrushapButtonVariant.ghost, onPressed: widget.onBack),
+              CrushapButton(
+                label: t.backWithArrow,
+                icon: const CrushapIcon('arrow-left', size: 16),
+                variant: CrushapButtonVariant.ghost,
+                onPressed: widget.onBack,
+              ),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

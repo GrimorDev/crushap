@@ -185,7 +185,7 @@ abstract class AppLocalizations {
   /// No description provided for @backWithArrow.
   ///
   /// In en, this message translates to:
-  /// **'← Back'**
+  /// **'Back'**
   String get backWithArrow;
 
   /// No description provided for @nameStepTitle.

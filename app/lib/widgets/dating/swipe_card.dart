@@ -3,7 +3,6 @@ import '../../theme/colors.dart';
 import '../../theme/effects.dart';
 import '../../theme/spacing.dart';
 import '../../theme/typography.dart';
-import '../core/app_badge.dart';
 import '../core/app_icon.dart';
 
 /// Ported from components/dating/SwipeCard.jsx.
@@ -102,16 +101,6 @@ class CrushapSwipeCard extends StatelessWidget {
                 ],
               ),
             ),
-          if (verified)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: CrushapBadge(
-                label: verifiedLabel,
-                variant: CrushapBadgeVariant.verified,
-                icon: const CrushapIcon('shield-check', size: 12),
-              ),
-            ),
           Positioned(
             left: 20,
             right: 20,
@@ -128,6 +117,13 @@ class CrushapSwipeCard extends StatelessWidget {
                     Text(name, style: CrushapText.displayMd),
                     const SizedBox(width: 8),
                     Text('$age', style: CrushapText.title.copyWith(color: CrushapColors.textSecondary)),
+                    if (verified) ...[
+                      const SizedBox(width: 6),
+                      Semantics(
+                        label: verifiedLabel,
+                        child: const CrushapIcon('shield-check', size: 18, color: CrushapColors.accentPrimary),
+                      ),
+                    ],
                   ],
                 ),
                 if (distance != null) ...[

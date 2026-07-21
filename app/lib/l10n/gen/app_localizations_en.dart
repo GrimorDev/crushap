@@ -56,7 +56,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyHaveAccount => 'I already have an account';
 
   @override
-  String get backWithArrow => '← Back';
+  String get backWithArrow => 'Back';
 
   @override
   String get nameStepTitle => 'What\'s your name?';

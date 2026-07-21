@@ -57,7 +57,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get alreadyHaveAccount => 'Mam już konto';
 
   @override
-  String get backWithArrow => '← Wstecz';
+  String get backWithArrow => 'Wstecz';
 
   @override
   String get nameStepTitle => 'Jak masz na imię?';

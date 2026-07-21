@@ -224,6 +224,7 @@ class _BackRow extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: CrushapButton(
         label: AppLocalizations.of(context)!.backWithArrow,
+        icon: const CrushapIcon('arrow-left', size: 16),
         variant: CrushapButtonVariant.ghost,
         onPressed: onBack,
       ),

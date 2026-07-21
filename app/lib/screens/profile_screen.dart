@@ -10,7 +10,6 @@ import '../services/session.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
-import '../widgets/core/app_badge.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
@@ -173,11 +172,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Text('${me.name}, ${me.age}', style: CrushapText.displayMd),
                               if (me.verified) ...[
-                                const SizedBox(width: 8),
-                                CrushapBadge(
+                                const SizedBox(width: 6),
+                                Semantics(
                                   label: t.verifiedBadge,
-                                  variant: CrushapBadgeVariant.verified,
-                                  icon: const CrushapIcon('shield-check', size: 12),
+                                  child: const CrushapIcon('shield-check', size: 18, color: CrushapColors.accentPrimary),
                                 ),
                               ],
                             ],
