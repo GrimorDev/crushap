@@ -9,6 +9,7 @@ import 'screens/filters_screen.dart';
 import 'screens/likes_screen.dart';
 import 'screens/matches_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/profile_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/server_setup_screen.dart';
@@ -25,7 +26,8 @@ void main() {
   runApp(const CrushapApp());
 }
 
-ImageProvider? _networkImage(String? url) => url == null ? null : NetworkImage(url);
+ImageProvider? _networkImage(String? url) =>
+    url == null ? null : NetworkImage(url);
 
 class CrushapApp extends StatefulWidget {
   const CrushapApp({super.key});
@@ -85,7 +87,21 @@ class _CrushapAppState extends State<CrushapApp> {
           api: _api!,
           matchId: profile.id,
           matchName: profile.name,
-          matchPhotoUrl: _api!.mediaUrl(profile.photos.isNotEmpty ? profile.photos.first : null),
+          matchPhotoUrl: _api!.mediaUrl(
+            profile.photos.isNotEmpty ? profile.photos.first : null,
+          ),
+          onBack: () => _navigatorKey.currentState!.pop(),
+        ),
+      ),
+    );
+  }
+
+  void _openProfileDetail(Profile profile) {
+    _navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => ProfileDetailScreen(
+          profile: profile,
+          api: _api!,
           onBack: () => _navigatorKey.currentState!.pop(),
         ),
       ),
@@ -98,6 +114,7 @@ class _CrushapAppState extends State<CrushapApp> {
         builder: (_) => LikesScreen(
           api: _api!,
           onMatch: _onMatch,
+          onOpenProfile: _openProfileDetail,
           onBack: () => _navigatorKey.currentState!.pop(),
         ),
       ),
@@ -120,7 +137,10 @@ class _CrushapAppState extends State<CrushapApp> {
   void _openServerSettings() {
     _navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (_) => ServerSetupScreen(session: _session!, onSaved: () => _navigatorKey.currentState!.pop()),
+        builder: (_) => ServerSetupScreen(
+          session: _session!,
+          onSaved: () => _navigatorKey.currentState!.pop(),
+        ),
       ),
     );
   }
@@ -128,7 +148,10 @@ class _CrushapAppState extends State<CrushapApp> {
   void _openNotifications() {
     _navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (_) => NotificationsScreen(session: _session!, onBack: () => _navigatorKey.currentState!.pop()),
+        builder: (_) => NotificationsScreen(
+          session: _session!,
+          onBack: () => _navigatorKey.currentState!.pop(),
+        ),
       ),
     );
   }
@@ -136,14 +159,20 @@ class _CrushapAppState extends State<CrushapApp> {
   void _openPrivacy() {
     _navigatorKey.currentState!.push(
       MaterialPageRoute(
-        builder: (_) => PrivacyScreen(session: _session!, onBack: () => _navigatorKey.currentState!.pop()),
+        builder: (_) => PrivacyScreen(
+          session: _session!,
+          onBack: () => _navigatorKey.currentState!.pop(),
+        ),
       ),
     );
   }
 
   void _openSubscription() {
     _navigatorKey.currentState!.push(
-      MaterialPageRoute(builder: (_) => SubscriptionScreen(onBack: () => _navigatorKey.currentState!.pop())),
+      MaterialPageRoute(
+        builder: (_) =>
+            SubscriptionScreen(onBack: () => _navigatorKey.currentState!.pop()),
+      ),
     );
   }
 
@@ -187,7 +216,10 @@ class _CrushapAppState extends State<CrushapApp> {
     }
 
     if (!session.hasServer) {
-      return ServerSetupScreen(session: session, onSaved: () => setState(() {}));
+      return ServerSetupScreen(
+        session: session,
+        onSaved: () => setState(() {}),
+      );
     }
 
     if (!session.isLoggedIn) {
@@ -206,39 +238,45 @@ class _CrushapAppState extends State<CrushapApp> {
 
     final Widget mainScreen = switch (_tab) {
       CrushapNavTab.discover => DiscoverScreen(
-          key: ValueKey('discover-$_filtersVersion'),
-          api: api,
-          onMatch: _onMatch,
-          onOpenFilters: _openFilters,
-          activeTab: _tab,
-          onTabChanged: _onTabChanged,
-        ),
+        key: ValueKey('discover-$_filtersVersion'),
+        api: api,
+        onMatch: _onMatch,
+        onOpenFilters: _openFilters,
+        onOpenProfile: _openProfileDetail,
+        activeTab: _tab,
+        onTabChanged: _onTabChanged,
+      ),
       CrushapNavTab.chat => ChatInboxScreen(
-          api: api,
-          onOpenThread: _openThread,
-          activeTab: _tab,
-          onTabChanged: _onTabChanged,
-        ),
+        api: api,
+        onOpenThread: _openThread,
+        activeTab: _tab,
+        onTabChanged: _onTabChanged,
+      ),
       CrushapNavTab.profile => ProfileScreen(
-          session: session,
-          api: api,
-          activeTab: _tab,
-          onTabChanged: _onTabChanged,
-          onOpenServerSettings: _openServerSettings,
-          onOpenNotifications: _openNotifications,
-          onOpenPrivacy: _openPrivacy,
-          onOpenSubscription: _openSubscription,
-          onLogout: _logout,
-          onLocaleChanged: _onLocaleChanged,
-        ),
-      CrushapNavTab.search => SearchScreen(api: api, activeTab: _tab, onTabChanged: _onTabChanged),
+        session: session,
+        api: api,
+        activeTab: _tab,
+        onTabChanged: _onTabChanged,
+        onOpenServerSettings: _openServerSettings,
+        onOpenNotifications: _openNotifications,
+        onOpenPrivacy: _openPrivacy,
+        onOpenSubscription: _openSubscription,
+        onLogout: _logout,
+        onLocaleChanged: _onLocaleChanged,
+      ),
+      CrushapNavTab.search => SearchScreen(
+        api: api,
+        onOpenProfile: _openProfileDetail,
+        activeTab: _tab,
+        onTabChanged: _onTabChanged,
+      ),
       CrushapNavTab.matches => MatchesScreen(
-          api: api,
-          onOpenThread: _openThread,
-          onOpenLikes: _openLikes,
-          activeTab: _tab,
-          onTabChanged: _onTabChanged,
-        ),
+        api: api,
+        onOpenThread: _openThread,
+        onOpenLikes: _openLikes,
+        activeTab: _tab,
+        onTabChanged: _onTabChanged,
+      ),
     };
 
     return Stack(
@@ -247,7 +285,13 @@ class _CrushapAppState extends State<CrushapApp> {
         if (_pendingMatch != null)
           CrushapMatchOverlay(
             matchName: _pendingMatch!.name,
-            matchPhoto: _networkImage(api.mediaUrl(_pendingMatch!.photos.isNotEmpty ? _pendingMatch!.photos.first : null)),
+            matchPhoto: _networkImage(
+              api.mediaUrl(
+                _pendingMatch!.photos.isNotEmpty
+                    ? _pendingMatch!.photos.first
+                    : null,
+              ),
+            ),
             onMessage: _openChatWithMatch,
             onKeepSwiping: _dismissMatch,
           ),

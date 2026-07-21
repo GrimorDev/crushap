@@ -13,10 +13,17 @@ import '../widgets/core/settings_scaffold.dart';
 /// Tapping the heart on a card likes them back; since they already liked
 /// you, that always completes the match immediately.
 class LikesScreen extends StatefulWidget {
-  const LikesScreen({super.key, required this.api, required this.onMatch, required this.onBack});
+  const LikesScreen({
+    super.key,
+    required this.api,
+    required this.onMatch,
+    required this.onOpenProfile,
+    required this.onBack,
+  });
 
   final ApiClient api;
   final ValueChanged<Profile> onMatch;
+  final ValueChanged<Profile> onOpenProfile;
   final VoidCallback onBack;
 
   @override
@@ -48,7 +55,11 @@ class _LikesScreenState extends State<LikesScreen> {
     setState(() => _busyIds.add(entry.profile.id));
     try {
       final result = await widget.api.swipe(entry.profile.id, 'like');
-      setState(() => _likes = _likes?.where((e) => e.profile.id != entry.profile.id).toList());
+      setState(
+        () => _likes = _likes
+            ?.where((e) => e.profile.id != entry.profile.id)
+            .toList(),
+      );
       if (result.matched && result.profile != null) {
         // Everyone here already liked us, so liking back is always mutual —
         // pop back to the main screen first so the match celebration
@@ -68,7 +79,9 @@ class _LikesScreenState extends State<LikesScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
     final likes = _likes;
-    final visible = likes == null ? null : (_newOnly ? likes.where((e) => e.isNew).toList() : likes);
+    final visible = likes == null
+        ? null
+        : (_newOnly ? likes.where((e) => e.isNew).toList() : likes);
     return SettingsScaffold(
       title: t.likesTitle,
       backLabel: t.backLabel,
@@ -88,51 +101,62 @@ class _LikesScreenState extends State<LikesScreen> {
             child: visible == null
                 ? const SizedBox.shrink()
                 : visible.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const CrushapIcon('heart', size: 32, color: CrushapColors.textTertiary),
-                              const SizedBox(height: 12),
-                              Text(
-                                t.noLikesYetTitle,
-                                textAlign: TextAlign.center,
-                                style: CrushapText.title,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                t.noLikesYetMessage,
-                                textAlign: TextAlign.center,
-                                style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
-                              ),
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CrushapIcon(
+                            'heart',
+                            size: 32,
+                            color: CrushapColors.textTertiary,
                           ),
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          const SizedBox(height: 12),
+                          Text(
+                            t.noLikesYetTitle,
+                            textAlign: TextAlign.center,
+                            style: CrushapText.title,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            t.noLikesYetMessage,
+                            textAlign: TextAlign.center,
+                            style: CrushapText.bodySm.copyWith(
+                              color: CrushapColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 12,
                           childAspectRatio: 0.82,
                         ),
-                        itemCount: visible.length,
-                        itemBuilder: (context, i) {
-                          final entry = visible[i];
-                          final photoUrl = widget.api.mediaUrl(
-                            entry.profile.photos.isNotEmpty ? entry.profile.photos.first : null,
-                          );
-                          return _LikeCard(
-                            entry: entry,
-                            photoUrl: photoUrl,
-                            busy: _busyIds.contains(entry.profile.id),
-                            onLikeBack: () => _likeBack(entry),
-                          );
-                        },
-                      ),
+                    itemCount: visible.length,
+                    itemBuilder: (context, i) {
+                      final entry = visible[i];
+                      final photoUrl = widget.api.mediaUrl(
+                        entry.profile.photos.isNotEmpty
+                            ? entry.profile.photos.first
+                            : null,
+                      );
+                      return _LikeCard(
+                        entry: entry,
+                        photoUrl: photoUrl,
+                        busy: _busyIds.contains(entry.profile.id),
+                        onLikeBack: () => _likeBack(entry),
+                        onOpenProfile: () =>
+                            widget.onOpenProfile(entry.profile),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -164,8 +188,20 @@ class _LikesTabBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _Tab(label: allLabel, selected: !newOnly, onTap: () => onChanged(false))),
-          Expanded(child: _Tab(label: newLabel, selected: newOnly, onTap: () => onChanged(true))),
+          Expanded(
+            child: _Tab(
+              label: allLabel,
+              selected: !newOnly,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _Tab(
+              label: newLabel,
+              selected: newOnly,
+              onTap: () => onChanged(true),
+            ),
+          ),
         ],
       ),
     );
@@ -173,7 +209,11 @@ class _LikesTabBar extends StatelessWidget {
 }
 
 class _Tab extends StatelessWidget {
-  const _Tab({required this.label, required this.selected, required this.onTap});
+  const _Tab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -194,7 +234,9 @@ class _Tab extends StatelessWidget {
         child: Text(
           label,
           style: CrushapText.bodySm.copyWith(
-            color: selected ? CrushapColors.textPrimary : CrushapColors.textSecondary,
+            color: selected
+                ? CrushapColors.textPrimary
+                : CrushapColors.textSecondary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -204,12 +246,19 @@ class _Tab extends StatelessWidget {
 }
 
 class _LikeCard extends StatelessWidget {
-  const _LikeCard({required this.entry, required this.photoUrl, required this.busy, required this.onLikeBack});
+  const _LikeCard({
+    required this.entry,
+    required this.photoUrl,
+    required this.busy,
+    required this.onLikeBack,
+    required this.onOpenProfile,
+  });
 
   final LikeEntry entry;
   final String? photoUrl;
   final bool busy;
   final VoidCallback onLikeBack;
+  final VoidCallback onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -219,16 +268,37 @@ class _LikeCard extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onOpenProfile,
+            ),
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               color: CrushapColors.surfaceCard,
-              image: photoUrl == null ? null : DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover),
+              image: photoUrl == null
+                  ? null
+                  : DecorationImage(
+                      image: NetworkImage(photoUrl!),
+                      fit: BoxFit.cover,
+                    ),
             ),
             child: photoUrl == null
-                ? Center(child: CrushapIcon('image', size: 28, color: CrushapColors.textTertiary.withValues(alpha: 0.4)))
+                ? Center(
+                    child: CrushapIcon(
+                      'image',
+                      size: 28,
+                      color: CrushapColors.textTertiary.withValues(alpha: 0.4),
+                    ),
+                  )
                 : null,
           ),
-          const DecoratedBox(decoration: BoxDecoration(gradient: CrushapColors.gradientScrimBottom)),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: CrushapColors.gradientScrimBottom,
+            ),
+          ),
           if (entry.isNew)
             Positioned(
               top: 8,
@@ -239,7 +309,12 @@ class _LikeCard extends StatelessWidget {
                   color: CrushapColors.accentPrimary,
                   borderRadius: BorderRadius.circular(CrushapRadii.pill),
                 ),
-                child: Text('•', style: CrushapText.caption.copyWith(color: CrushapColors.textPrimary)),
+                child: Text(
+                  '•',
+                  style: CrushapText.caption.copyWith(
+                    color: CrushapColors.textPrimary,
+                  ),
+                ),
               ),
             ),
           Positioned(
@@ -253,7 +328,10 @@ class _LikeCard extends StatelessWidget {
                     '${profile.name}, ${profile.age}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: CrushapText.bodySm.copyWith(color: CrushapColors.textPrimary, fontWeight: FontWeight.w600),
+                    style: CrushapText.bodySm.copyWith(
+                      color: CrushapColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 GestureDetector(
@@ -266,7 +344,11 @@ class _LikeCard extends StatelessWidget {
                       color: CrushapColors.accentPrimary,
                       shape: BoxShape.circle,
                     ),
-                    child: const CrushapIcon('heart', size: 15, color: CrushapColors.textPrimary),
+                    child: const CrushapIcon(
+                      'heart',
+                      size: 15,
+                      color: CrushapColors.textPrimary,
+                    ),
                   ),
                 ),
               ],

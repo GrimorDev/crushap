@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import '../../theme/colors.dart';
 import '../../theme/effects.dart';
@@ -27,6 +28,8 @@ class CrushapSwipeCard extends StatelessWidget {
     this.photoUrls = const [],
     this.photoIndex = 0,
     this.onTapPhoto,
+    this.onExpand,
+    this.expandLabel = 'View profile',
     this.width = 340,
     this.height = 460,
   });
@@ -36,6 +39,7 @@ class CrushapSwipeCard extends StatelessWidget {
   final String? distance;
   final bool verified;
   final String verifiedLabel;
+
   /// The "Ready for relationship"-style status pill, top-left of the
   /// photo — null hides it (e.g. lookingFor unset).
   final String? statusLabel;
@@ -44,15 +48,25 @@ class CrushapSwipeCard extends StatelessWidget {
   final List<String> tags;
   final List<String> photoUrls;
   final int photoIndex;
+
   /// `true` to advance forward, `false` to go back — only called when
   /// there's more than one photo to cycle through.
   final ValueChanged<bool>? onTapPhoto;
+
+  /// Opens the full profile (all photos, full bio, every interest) — the
+  /// card itself only ever has room for one photo at a time and a
+  /// one-line bio, so this is the only way to see the rest.
+  final VoidCallback? onExpand;
+  final String expandLabel;
   final double width;
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    final index = photoIndex.clamp(0, photoUrls.isEmpty ? 0 : photoUrls.length - 1);
+    final index = photoIndex.clamp(
+      0,
+      photoUrls.isEmpty ? 0 : photoUrls.length - 1,
+    );
     final photoUrl = photoUrls.isEmpty ? null : photoUrls[index];
     return Container(
       width: width,
@@ -71,8 +85,10 @@ class CrushapSwipeCard extends StatelessWidget {
               photoUrl,
               key: ValueKey(photoUrl),
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => const _PhotoPlaceholder(),
-              loadingBuilder: (context, child, progress) => progress == null ? child : const _PhotoPlaceholder(),
+              errorBuilder: (context, error, stack) =>
+                  const _PhotoPlaceholder(),
+              loadingBuilder: (context, child, progress) =>
+                  progress == null ? child : const _PhotoPlaceholder(),
             )
           else
             const _PhotoPlaceholder(),
@@ -83,7 +99,9 @@ class CrushapSwipeCard extends StatelessWidget {
             ),
           // Bottom scrim for text legibility.
           const DecoratedBox(
-            decoration: BoxDecoration(gradient: CrushapColors.gradientScrimBottom),
+            decoration: BoxDecoration(
+              gradient: CrushapColors.gradientScrimBottom,
+            ),
           ),
           if (photoUrls.length > 1)
             Positioned(
@@ -97,8 +115,12 @@ class CrushapSwipeCard extends StatelessWidget {
                     Expanded(
                       child: DecoratedBox(
                         decoration: BoxDecoration(
-                          color: i <= index ? const Color(0xFFFFFFFF) : const Color(0x4DFFFFFF),
-                          borderRadius: BorderRadius.circular(CrushapRadii.pill),
+                          color: i <= index
+                              ? const Color(0xFFFFFFFF)
+                              : const Color(0x4DFFFFFF),
+                          borderRadius: BorderRadius.circular(
+                            CrushapRadii.pill,
+                          ),
                         ),
                         child: const SizedBox(height: 3),
                       ),
@@ -112,7 +134,10 @@ class CrushapSwipeCard extends StatelessWidget {
               top: photoUrls.length > 1 ? 28 : 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0x99000000), // rgba(0,0,0,.6)
                   borderRadius: BorderRadius.circular(CrushapRadii.pill),
@@ -121,11 +146,50 @@ class CrushapSwipeCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (statusIcon != null) ...[
-                      CrushapIcon(statusIcon!, size: 13, color: CrushapColors.accentPrimary),
+                      CrushapIcon(
+                        statusIcon!,
+                        size: 13,
+                        color: CrushapColors.accentPrimary,
+                      ),
                       const SizedBox(width: 6),
                     ],
-                    Text(statusLabel!, style: CrushapText.caption.copyWith(color: CrushapColors.textPrimary)),
+                    Text(
+                      statusLabel!,
+                      style: CrushapText.caption.copyWith(
+                        color: CrushapColors.textPrimary,
+                      ),
+                    ),
                   ],
+                ),
+              ),
+            ),
+          if (onExpand != null)
+            Positioned(
+              top: photoUrls.length > 1 ? 28 : 12,
+              right: 12,
+              child: Semantics(
+                label: expandLabel,
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onExpand,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: Color(0x99000000),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Transform.rotate(
+                      angle: math.pi / 2,
+                      child: const CrushapIcon(
+                        'chevron-left',
+                        size: 15,
+                        color: CrushapColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -144,12 +208,21 @@ class CrushapSwipeCard extends StatelessWidget {
                   children: [
                     Text(name, style: CrushapText.displayMd),
                     const SizedBox(width: 8),
-                    Text('$age', style: CrushapText.title.copyWith(color: CrushapColors.textSecondary)),
+                    Text(
+                      '$age',
+                      style: CrushapText.title.copyWith(
+                        color: CrushapColors.textSecondary,
+                      ),
+                    ),
                     if (verified) ...[
                       const SizedBox(width: 6),
                       Semantics(
                         label: verifiedLabel,
-                        child: const CrushapIcon('shield-check', size: 18, color: CrushapColors.accentPrimary),
+                        child: const CrushapIcon(
+                          'shield-check',
+                          size: 18,
+                          color: CrushapColors.accentPrimary,
+                        ),
                       ),
                     ],
                   ],
@@ -159,9 +232,18 @@ class CrushapSwipeCard extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const CrushapIcon('map-pin', size: 14, color: CrushapColors.textSecondary),
+                      const CrushapIcon(
+                        'map-pin',
+                        size: 14,
+                        color: CrushapColors.textSecondary,
+                      ),
                       const SizedBox(width: 6),
-                      Text(distance!, style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary)),
+                      Text(
+                        distance!,
+                        style: CrushapText.bodySm.copyWith(
+                          color: CrushapColors.textSecondary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -171,7 +253,9 @@ class CrushapSwipeCard extends StatelessWidget {
                     constraints: const BoxConstraints(maxWidth: 280),
                     child: Text(
                       bio!,
-                      style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
+                      style: CrushapText.bodySm.copyWith(
+                        color: CrushapColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -183,12 +267,24 @@ class CrushapSwipeCard extends StatelessWidget {
                     children: [
                       for (final t in tags)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0x1AFFFFFF), // rgba(255,255,255,.1)
-                            borderRadius: BorderRadius.circular(CrushapRadii.pill),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          child: Text(t, style: CrushapText.caption.copyWith(color: CrushapColors.textPrimary)),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0x1AFFFFFF,
+                            ), // rgba(255,255,255,.1)
+                            borderRadius: BorderRadius.circular(
+                              CrushapRadii.pill,
+                            ),
+                          ),
+                          child: Text(
+                            t,
+                            style: CrushapText.caption.copyWith(
+                              color: CrushapColors.textPrimary,
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -216,7 +312,11 @@ class _PhotoPlaceholder extends StatelessWidget {
         ),
       ),
       alignment: Alignment.center,
-      child: CrushapIcon('image', size: 40, color: CrushapColors.textTertiary.withValues(alpha: 0.4)),
+      child: CrushapIcon(
+        'image',
+        size: 40,
+        color: CrushapColors.textTertiary.withValues(alpha: 0.4),
+      ),
     );
   }
 }

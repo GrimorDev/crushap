@@ -231,6 +231,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refresh => 'Refresh';
 
   @override
+  String get viewProfileLabel => 'View profile';
+
+  @override
   String get stampLike => 'LIKE';
 
   @override

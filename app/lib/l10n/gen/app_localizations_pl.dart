@@ -234,6 +234,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get refresh => 'Odśwież';
 
   @override
+  String get viewProfileLabel => 'Zobacz profil';
+
+  @override
   String get stampLike => 'POLUBIENIE';
 
   @override

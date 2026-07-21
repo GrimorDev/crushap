@@ -16,10 +16,10 @@ import '../widgets/navigation/bottom_nav.dart';
 enum _SwipeAction { pass, superlike, like }
 
 String _actionName(_SwipeAction a) => switch (a) {
-      _SwipeAction.pass => 'pass',
-      _SwipeAction.superlike => 'superlike',
-      _SwipeAction.like => 'like',
-    };
+  _SwipeAction.pass => 'pass',
+  _SwipeAction.superlike => 'superlike',
+  _SwipeAction.like => 'like',
+};
 
 /// Ported from ui_kits/dating-app/DiscoverScreen.jsx, now driven by the
 /// live `/api/discover` + `/api/swipes` endpoints instead of a static
@@ -32,6 +32,7 @@ class DiscoverScreen extends StatefulWidget {
     required this.api,
     required this.onMatch,
     required this.onOpenFilters,
+    required this.onOpenProfile,
     required this.activeTab,
     required this.onTabChanged,
   });
@@ -39,6 +40,7 @@ class DiscoverScreen extends StatefulWidget {
   final ApiClient api;
   final ValueChanged<Profile> onMatch;
   final VoidCallback onOpenFilters;
+  final ValueChanged<Profile> onOpenProfile;
   final CrushapNavTab activeTab;
   final ValueChanged<CrushapNavTab> onTabChanged;
 
@@ -68,9 +70,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   void initState() {
     super.initState();
     _load();
-    widget.api.getMe().then((me) {
-      if (mounted) setState(() => _me = me);
-    }).catchError((_) {});
+    widget.api
+        .getMe()
+        .then((me) {
+          if (mounted) setState(() => _me = me);
+        })
+        .catchError((_) {});
   }
 
   Future<void> _load() async {
@@ -129,7 +134,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       final result = await widget.api.swipe(target.id, _actionName(action));
       _lastSwiped = target;
       _lastMatched = result.matched;
-      if (result.matched && result.profile != null) widget.onMatch(result.profile!);
+      if (result.matched && result.profile != null) {
+        widget.onMatch(result.profile!);
+      }
     } catch (_) {
       // Network hiccup — still move on locally so the deck doesn't stall;
       // the server is the source of truth for anyone re-fetching /discover.
@@ -207,29 +214,46 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   ({String label, Color color, Alignment align})? _stamp(AppLocalizations t) {
     const start = 36.0;
     if (_drag.dy < -start && _drag.dy.abs() > _drag.dx.abs()) {
-      return (label: t.stampSuperlike, color: CrushapColors.actionSuperlike, align: Alignment.topCenter);
+      return (
+        label: t.stampSuperlike,
+        color: CrushapColors.actionSuperlike,
+        align: Alignment.topCenter,
+      );
     }
     if (_drag.dx > start) {
-      return (label: t.stampLike, color: CrushapColors.actionLike, align: Alignment.topRight);
+      return (
+        label: t.stampLike,
+        color: CrushapColors.actionLike,
+        align: Alignment.topRight,
+      );
     }
     if (_drag.dx < -start) {
-      return (label: t.stampNope, color: CrushapColors.actionPass, align: Alignment.topLeft);
+      return (
+        label: t.stampNope,
+        color: CrushapColors.actionPass,
+        align: Alignment.topLeft,
+      );
     }
     return null;
   }
 
   double get _stampOpacity {
-    final dist = _drag.dy.abs() > _drag.dx.abs() ? _drag.dy.abs() : _drag.dx.abs();
+    final dist = _drag.dy.abs() > _drag.dx.abs()
+        ? _drag.dy.abs()
+        : _drag.dx.abs();
     return ((dist - 36) / 70).clamp(0.0, 1.0);
   }
 
-  ({String icon, String label})? _lookingForBadge(AppLocalizations t, String? lookingFor) => switch (lookingFor) {
-        'relationship' => (icon: 'heart', label: t.lookingForRelationship),
-        'casual' => (icon: 'zap', label: t.lookingForCasual),
-        'friends' => (icon: 'users', label: t.lookingForFriends),
-        'unsure' => (icon: 'sparkles', label: t.lookingForUnsure),
-        _ => null,
-      };
+  ({String icon, String label})? _lookingForBadge(
+    AppLocalizations t,
+    String? lookingFor,
+  ) => switch (lookingFor) {
+    'relationship' => (icon: 'heart', label: t.lookingForRelationship),
+    'casual' => (icon: 'zap', label: t.lookingForCasual),
+    'friends' => (icon: 'users', label: t.lookingForFriends),
+    'unsure' => (icon: 'sparkles', label: t.lookingForUnsure),
+    _ => null,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +281,9 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                 padding: const EdgeInsets.only(bottom: 2),
                                 child: Text(
                                   t.discoverGreeting(_me!.name),
-                                  style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary),
+                                  style: CrushapText.bodySm.copyWith(
+                                    color: CrushapColors.textTertiary,
+                                  ),
                                 ),
                               ),
                             Text(t.discoverHeadline, style: CrushapText.title),
@@ -281,7 +307,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     child: AbsorbPointer(
                       child: CrushapInput(
                         placeholder: t.findYourPartner,
-                        icon: const CrushapIcon('search', size: 18, color: CrushapColors.textTertiary),
+                        icon: const CrushapIcon(
+                          'search',
+                          size: 18,
+                          color: CrushapColors.textTertiary,
+                        ),
                       ),
                     ),
                   ),
@@ -301,13 +331,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CrushapIcon('sparkles', size: 13, color: CrushapColors.textTertiary),
+                    const CrushapIcon(
+                      'sparkles',
+                      size: 13,
+                      color: CrushapColors.textTertiary,
+                    ),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
                         t.filtersWidenedNotice,
                         textAlign: TextAlign.center,
-                        style: CrushapText.caption.copyWith(color: CrushapColors.textTertiary),
+                        style: CrushapText.caption.copyWith(
+                          color: CrushapColors.textTertiary,
+                        ),
                       ),
                     ),
                   ],
@@ -335,14 +371,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     label: t.passLabel,
                     variant: CrushapIconButtonVariant.outline,
                     size: CrushapIconButtonSize.lg,
-                    onPressed: _current == null ? null : () => _fly(_SwipeAction.pass),
+                    onPressed: _current == null
+                        ? null
+                        : () => _fly(_SwipeAction.pass),
                   ),
                   const SizedBox(width: 20),
                   CrushapIconButton(
                     icon: 'star',
                     label: t.superlikeLabel,
                     variant: CrushapIconButtonVariant.surface,
-                    onPressed: _current == null ? null : () => _fly(_SwipeAction.superlike),
+                    onPressed: _current == null
+                        ? null
+                        : () => _fly(_SwipeAction.superlike),
                   ),
                   const SizedBox(width: 20),
                   CrushapIconButton(
@@ -350,21 +390,32 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     label: t.likeLabel,
                     variant: CrushapIconButtonVariant.filled,
                     size: CrushapIconButtonSize.lg,
-                    onPressed: _current == null ? null : () => _fly(_SwipeAction.like),
+                    onPressed: _current == null
+                        ? null
+                        : () => _fly(_SwipeAction.like),
                   ),
                 ],
               ),
             ),
-            CrushapBottomNav(active: widget.activeTab, onChanged: widget.onTabChanged),
+            CrushapBottomNav(
+              active: widget.activeTab,
+              onChanged: widget.onTabChanged,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody(AppLocalizations t, ({String label, Color color, Alignment align})? stamp) {
+  Widget _buildBody(
+    AppLocalizations t,
+    ({String label, Color color, Alignment align})? stamp,
+  ) {
     if (_loading) {
-      return Text(t.findingPeopleNearby, style: CrushapText.body.copyWith(color: CrushapColors.textSecondary));
+      return Text(
+        t.findingPeopleNearby,
+        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+      );
     }
     if (_loadError != null) {
       return _MessageCard(
@@ -387,7 +438,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     return _buildCard(t, stamp);
   }
 
-  Widget _buildCard(AppLocalizations t, ({String label, Color color, Alignment align})? stamp) {
+  Widget _buildCard(
+    AppLocalizations t,
+    ({String label, Color color, Alignment align})? stamp,
+  ) {
     final angle = (_drag.dx / 300).clamp(-0.5, 0.5);
     final current = _current!;
     final badge = _lookingForBadge(t, current.lookingFor);
@@ -416,18 +470,27 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 key: ValueKey('${current.id}-$_idx'),
                 name: current.name,
                 age: current.age,
-                distance: current.distanceValue == null ? null : t.distanceAwayKm(current.distanceValue!),
+                distance: current.distanceValue == null
+                    ? null
+                    : t.distanceAwayKm(current.distanceValue!),
                 verified: current.verified,
                 verifiedLabel: t.verifiedBadge,
                 statusLabel: badge?.label,
                 statusIcon: badge?.icon,
+                onExpand: () => widget.onOpenProfile(current),
+                expandLabel: t.viewProfileLabel,
                 bio: current.bio,
                 tags: current.tags,
-                photoUrls: [for (final p in current.photos) widget.api.mediaUrl(p)!],
+                photoUrls: [
+                  for (final p in current.photos) widget.api.mediaUrl(p)!,
+                ],
                 photoIndex: _photoIndex,
                 onTapPhoto: (forward) => setState(() {
                   final count = current.photos.length;
-                  _photoIndex = (_photoIndex + (forward ? 1 : -1)).clamp(0, count - 1);
+                  _photoIndex = (_photoIndex + (forward ? 1 : -1)).clamp(
+                    0,
+                    count - 1,
+                  );
                 }),
                 width: 340,
                 height: 440,
@@ -444,8 +507,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                           angle: stamp.align == Alignment.topRight
                               ? -0.22
                               : stamp.align == Alignment.topLeft
-                                  ? 0.22
-                                  : 0.0,
+                              ? 0.22
+                              : 0.0,
                           child: _Stamp(label: stamp.label, color: stamp.color),
                         ),
                       ),
@@ -490,8 +553,20 @@ class _ModeToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _ModeTab(label: datingLabel, selected: !friendsMode, onTap: () => onChanged(false))),
-          Expanded(child: _ModeTab(label: friendsLabel, selected: friendsMode, onTap: () => onChanged(true))),
+          Expanded(
+            child: _ModeTab(
+              label: datingLabel,
+              selected: !friendsMode,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _ModeTab(
+              label: friendsLabel,
+              selected: friendsMode,
+              onTap: () => onChanged(true),
+            ),
+          ),
         ],
       ),
     );
@@ -499,7 +574,11 @@ class _ModeToggle extends StatelessWidget {
 }
 
 class _ModeTab extends StatelessWidget {
-  const _ModeTab({required this.label, required this.selected, required this.onTap});
+  const _ModeTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -522,7 +601,9 @@ class _ModeTab extends StatelessWidget {
         child: Text(
           label,
           style: CrushapText.bodySm.copyWith(
-            color: selected ? CrushapColors.textPrimary : CrushapColors.textSecondary,
+            color: selected
+                ? CrushapColors.textPrimary
+                : CrushapColors.textSecondary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -548,7 +629,10 @@ class _Stamp extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: CrushapText.displayMd.copyWith(color: color, letterSpacing: CrushapText.trackingWide * 28),
+        style: CrushapText.displayMd.copyWith(
+          color: color,
+          letterSpacing: CrushapText.trackingWide * 28,
+        ),
       ),
     );
   }
@@ -591,12 +675,18 @@ class _MessageCard extends StatelessWidget {
             children: [
               CrushapIcon(icon, size: 40, color: CrushapColors.accentSecondary),
               const SizedBox(height: 16),
-              Text(title, textAlign: TextAlign.center, style: CrushapText.title),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: CrushapText.title,
+              ),
               const SizedBox(height: 10),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
+                style: CrushapText.bodySm.copyWith(
+                  color: CrushapColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 24),
               CrushapButton(label: actionLabel, onPressed: onAction),

@@ -14,9 +14,16 @@ import '../widgets/navigation/bottom_nav.dart';
 /// The "Search" bottom-nav tab — search over every registered user
 /// (`GET /api/search`) by name or interest tag.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key, required this.api, required this.activeTab, required this.onTabChanged});
+  const SearchScreen({
+    super.key,
+    required this.api,
+    required this.onOpenProfile,
+    required this.activeTab,
+    required this.onTabChanged,
+  });
 
   final ApiClient api;
+  final ValueChanged<Profile> onOpenProfile;
   final CrushapNavTab activeTab;
   final ValueChanged<CrushapNavTab> onTabChanged;
 
@@ -45,7 +52,10 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onChanged(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () => _runSearch(value));
+    _debounce = Timer(
+      const Duration(milliseconds: 300),
+      () => _runSearch(value),
+    );
   }
 
   Future<void> _runSearch(String query) async {
@@ -73,7 +83,11 @@ class _SearchScreenState extends State<SearchScreen> {
               child: CrushapInput(
                 controller: _controller,
                 placeholder: t.searchPlaceholder,
-                icon: const CrushapIcon('search', size: 18, color: CrushapColors.textTertiary),
+                icon: const CrushapIcon(
+                  'search',
+                  size: 18,
+                  color: CrushapColors.textTertiary,
+                ),
                 onChanged: _onChanged,
               ),
             ),
@@ -81,59 +95,97 @@ class _SearchScreenState extends State<SearchScreen> {
               child: _loading
                   ? const SizedBox.shrink()
                   : _results.isEmpty
-                      ? Center(
-                          child: Text(
-                            t.noSearchResults,
-                            style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          itemCount: _results.length,
-                          separatorBuilder: (context, i) => const SizedBox(height: 2),
-                          itemBuilder: (context, i) {
-                            final p = _results[i];
-                            final photoUrl = widget.api.mediaUrl(p.photos.isNotEmpty ? p.photos.first : null);
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  CrushapAvatar(
-                                    name: p.name,
-                                    size: CrushapAvatarSize.md,
-                                    image: photoUrl == null ? null : NetworkImage(photoUrl),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Text('${p.name}, ${p.age}', style: CrushapText.body.copyWith(fontWeight: FontWeight.w600)),
-                                            if (p.distanceValue != null) ...[
-                                              const SizedBox(width: 6),
-                                              Text(t.distanceAwayKm(p.distanceValue!), style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary)),
-                                            ],
-                                          ],
-                                        ),
-                                        const SizedBox(height: 6),
-                                        Wrap(
-                                          spacing: 6,
-                                          runSpacing: 6,
-                                          children: [for (final t in p.tags) CrushapChip(label: t)],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                  ? Center(
+                      child: Text(
+                        t.noSearchResults,
+                        style: CrushapText.body.copyWith(
+                          color: CrushapColors.textSecondary,
                         ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      itemCount: _results.length,
+                      separatorBuilder: (context, i) =>
+                          const SizedBox(height: 2),
+                      itemBuilder: (context, i) {
+                        final p = _results[i];
+                        final photoUrl = widget.api.mediaUrl(
+                          p.photos.isNotEmpty ? p.photos.first : null,
+                        );
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => widget.onOpenProfile(p),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CrushapAvatar(
+                                  name: p.name,
+                                  size: CrushapAvatarSize.md,
+                                  image: photoUrl == null
+                                      ? null
+                                      : NetworkImage(photoUrl),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${p.name}, ${p.age}',
+                                            style: CrushapText.body.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (p.distanceValue != null) ...[
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              t.distanceAwayKm(
+                                                p.distanceValue!,
+                                              ),
+                                              style: CrushapText.bodySm
+                                                  .copyWith(
+                                                    color: CrushapColors
+                                                        .textTertiary,
+                                                  ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Wrap(
+                                        spacing: 6,
+                                        runSpacing: 6,
+                                        children: [
+                                          for (final t in p.tags)
+                                            CrushapChip(label: t),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
-            CrushapBottomNav(active: widget.activeTab, onChanged: widget.onTabChanged),
+            CrushapBottomNav(
+              active: widget.activeTab,
+              onChanged: widget.onTabChanged,
+            ),
           ],
         ),
       ),

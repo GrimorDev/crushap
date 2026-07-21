@@ -76,6 +76,7 @@
   "allCaughtUpTitle": "You're all caught up",
   "allCaughtUpMessage": "That's everyone nearby for now. New people show up here as they join — check back soon.",
   "refresh": "Refresh",
+  "viewProfileLabel": "View profile",
   "stampLike": "LIKE",
   "stampNope": "NOPE",
   "stampSuperlike": "SUPER LIKE",

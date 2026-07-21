@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get refresh;
 
+  /// No description provided for @viewProfileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile'**
+  String get viewProfileLabel;
+
   /// No description provided for @stampLike.
   ///
   /// In en, this message translates to:
