@@ -73,13 +73,25 @@ async function distanceKm(fromId, toId) {
   return d === null ? null : Math.round(parseFloat(d) * 10) / 10;
 }
 
+// Tolerant on purpose: a single corrupted `tags` value (hand-edited Redis
+// data, a future format change, whatever) should make that one user look
+// tag-less, not throw and take the whole request down with it.
+function parseTags(raw) {
+  try {
+    const parsed = JSON.parse(raw.tags || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function toPublicProfile(raw, { photos = [], distance = null } = {}) {
   return {
     id: raw.id,
     name: raw.name,
     age: parseInt(raw.age, 10),
     bio: raw.bio || '',
-    tags: JSON.parse(raw.tags || '[]'),
+    tags: parseTags(raw),
     gender: raw.gender || null,
     verified: raw.verified === '1',
     photos,
@@ -97,5 +109,6 @@ module.exports = {
   getPhotos,
   allUserIds,
   distanceKm,
+  parseTags,
   toPublicProfile,
 };

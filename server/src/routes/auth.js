@@ -2,12 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const users = require('../store/users');
 const { signToken } = require('../auth');
+const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
 
 const VALID_GENDERS = new Set(['woman', 'man', 'nonbinary']);
 
-router.post('/register', async (req, res) => {
+router.post('/register', asyncHandler(async (req, res) => {
   const { name, email, password, age, bio, tags, gender } = req.body || {};
   if (!name || !email || !password || !age) {
     return res.status(400).json({ error: 'name, email, password, age are required' });
@@ -27,9 +28,9 @@ router.post('/register', async (req, res) => {
   const token = signToken(id);
   const raw = await users.getUserRaw(id);
   res.status(201).json({ token, user: users.toPublicProfile(raw) });
-});
+}));
 
-router.post('/login', async (req, res) => {
+router.post('/login', asyncHandler(async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
 
@@ -43,6 +44,6 @@ router.post('/login', async (req, res) => {
   const token = signToken(id);
   const photos = await users.getPhotos(id);
   res.json({ token, user: users.toPublicProfile(raw, { photos }) });
-});
+}));
 
 module.exports = router;

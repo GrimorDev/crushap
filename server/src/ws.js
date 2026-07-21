@@ -59,26 +59,34 @@ function attachWebSocketServer(server) {
     ws.userId = userId;
     ws.rooms = new Set();
 
+    // Same reasoning as server/src/asyncHandler.js: an EventEmitter doesn't
+    // catch rejections from an async listener either, so a Redis hiccup or
+    // bad message here would otherwise crash the whole process — not just
+    // drop this one socket.
     ws.on('message', async (raw) => {
-      let msg;
       try {
-        msg = JSON.parse(raw.toString());
-      } catch {
-        return;
-      }
+        let msg;
+        try {
+          msg = JSON.parse(raw.toString());
+        } catch {
+          return;
+        }
 
-      if (msg.type === 'join' && msg.matchId) {
-        if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
-        joinRoom(ws, chatStore.pairKey(userId, msg.matchId));
-        return;
-      }
+        if (msg.type === 'join' && msg.matchId) {
+          if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
+          joinRoom(ws, chatStore.pairKey(userId, msg.matchId));
+          return;
+        }
 
-      if (msg.type === 'message' && msg.matchId && typeof msg.text === 'string' && msg.text.trim()) {
-        if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
-        const chatId = chatStore.pairKey(userId, msg.matchId);
-        const message = { id: uuid(), fromUserId: userId, text: msg.text.trim(), ts: Date.now() };
-        await chatStore.appendMessage(chatId, message);
-        await publisher.publish(channelFor(chatId), JSON.stringify({ type: 'message', chatId, message }));
+        if (msg.type === 'message' && msg.matchId && typeof msg.text === 'string' && msg.text.trim()) {
+          if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
+          const chatId = chatStore.pairKey(userId, msg.matchId);
+          const message = { id: uuid(), fromUserId: userId, text: msg.text.trim(), ts: Date.now() };
+          await chatStore.appendMessage(chatId, message);
+          await publisher.publish(channelFor(chatId), JSON.stringify({ type: 'message', chatId, message }));
+        }
+      } catch (err) {
+        console.error('[ws] message handler failed', err);
       }
     });
 

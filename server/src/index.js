@@ -7,6 +7,17 @@ const { attachWebSocketServer } = require('./ws');
 
 fs.mkdirSync(uploadDir, { recursive: true });
 
+// Last-resort net: every route and the WS message handler now catches its
+// own errors (see asyncHandler.js / ws.js), so this should rarely fire —
+// but logging beats the default Node behavior of crashing the whole
+// process (taking down every other in-flight request) over one bug.
+process.on('unhandledRejection', (reason) => {
+  console.error('[fatal] unhandled rejection', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[fatal] uncaught exception', err);
+});
+
 const app = express();
 app.use(cors({ origin: corsOrigin === '*' ? true : corsOrigin.split(',') }));
 app.use(express.json());

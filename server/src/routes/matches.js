@@ -3,11 +3,12 @@ const users = require('../store/users');
 const swipesStore = require('../store/swipes');
 const chatStore = require('../store/chat');
 const { requireAuth } = require('../auth');
+const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
 router.use(requireAuth);
 
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
   const ids = await swipesStore.listMatches(req.userId);
   const profiles = await Promise.all(
     ids.map(async (id) => {
@@ -21,6 +22,6 @@ router.get('/', async (req, res) => {
     })
   );
   res.json({ matches: profiles.filter(Boolean) });
-});
+}));
 
 module.exports = router;

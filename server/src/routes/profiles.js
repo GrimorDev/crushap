@@ -7,6 +7,7 @@ const users = require('../store/users');
 const swipes = require('../store/swipes');
 const { requireAuth } = require('../auth');
 const { uploadDir } = require('../config');
+const { asyncHandler } = require('../asyncHandler');
 
 const router = express.Router();
 
@@ -26,15 +27,15 @@ const upload = multer({
 
 router.use(requireAuth);
 
-router.get('/me', async (req, res) => {
+router.get('/me', asyncHandler(async (req, res) => {
   const raw = await users.getUserRaw(req.userId);
   const photos = await users.getPhotos(req.userId);
   res.json({ user: users.toPublicProfile(raw, { photos }) });
-});
+}));
 
 const VALID_GENDERS = new Set(['woman', 'man', 'nonbinary']);
 
-router.patch('/me', async (req, res) => {
+router.patch('/me', asyncHandler(async (req, res) => {
   const { name, bio, age, tags, gender, lat, lng } = req.body || {};
   if (gender != null && !VALID_GENDERS.has(gender)) {
     return res.status(400).json({ error: 'gender must be one of woman, man, nonbinary' });
@@ -43,11 +44,11 @@ router.patch('/me', async (req, res) => {
   const raw = await users.getUserRaw(req.userId);
   const photos = await users.getPhotos(req.userId);
   res.json({ user: users.toPublicProfile(raw, { photos }) });
-});
+}));
 
 const MAX_PHOTOS = 6;
 
-router.post('/me/photos', upload.single('photo'), async (req, res) => {
+router.post('/me/photos', upload.single('photo'), asyncHandler(async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file under field "photo"' });
   const existing = await users.getPhotos(req.userId);
   if (existing.length >= MAX_PHOTOS) {
@@ -57,16 +58,16 @@ router.post('/me/photos', upload.single('photo'), async (req, res) => {
   const url = `/uploads/${req.file.filename}`;
   await users.addPhoto(req.userId, url);
   res.status(201).json({ url });
-});
+}));
 
-router.delete('/me/photos', async (req, res) => {
+router.delete('/me/photos', asyncHandler(async (req, res) => {
   const { url } = req.body || {};
   if (!url) return res.status(400).json({ error: 'url is required' });
   await users.removePhoto(req.userId, url);
   const filename = path.basename(url);
   await fs.unlink(path.join(uploadDir, filename)).catch(() => {});
   res.status(204).end();
-});
+}));
 
 const GENDER_SHOW_ME = { women: 'woman', men: 'man' }; // 'everyone' (or absent) = no filter
 
@@ -82,7 +83,7 @@ const GENDER_SHOW_ME = { women: 'woman', men: 'man' }; // 'everyone' (or absent)
 const MIN_RESULTS = 5;
 const RELAX_ORDER = ['hasPhoto', 'tags', 'verifiedOnly', 'maxAge', 'maxDistanceKm'];
 
-router.get('/discover', async (req, res) => {
+router.get('/discover', asyncHandler(async (req, res) => {
   const [allIds, swipedIds] = await Promise.all([
     users.allUserIds(),
     swipes.swipedIds(req.userId),
@@ -121,7 +122,7 @@ router.get('/discover', async (req, res) => {
         ]);
         if (!raw) return null;
         if (wantGender && raw.gender !== wantGender) return null; // hard filter
-        const tags = JSON.parse(raw.tags || '[]').map((t) => t.toLowerCase());
+        const tags = users.parseTags(raw).map((t) => t.toLowerCase());
         return {
           raw,
           photos,
@@ -164,9 +165,9 @@ router.get('/discover', async (req, res) => {
 
   const profiles = matched.slice(0, 30).map((c) => users.toPublicProfile(c.raw, { photos: c.photos, distance: c.distanceKm }));
   res.json({ profiles, relaxedFilters: dropped });
-});
+}));
 
-router.get('/search', async (req, res) => {
+router.get('/search', asyncHandler(async (req, res) => {
   const q = String(req.query.q || '').trim().toLowerCase();
   const allIds = await users.allUserIds();
   const candidateIds = allIds.filter((id) => id !== req.userId);
@@ -175,7 +176,7 @@ router.get('/search', async (req, res) => {
     candidateIds.map(async (id) => {
       const raw = await users.getUserRaw(id);
       if (!raw) return null;
-      const tags = JSON.parse(raw.tags || '[]');
+      const tags = users.parseTags(raw);
       const isMatch = !q || raw.name.toLowerCase().includes(q) || tags.some((t) => t.toLowerCase().includes(q));
       if (!isMatch) return null;
       const photos = await users.getPhotos(id);
@@ -183,6 +184,6 @@ router.get('/search', async (req, res) => {
     })
   );
   res.json({ profiles: profiles.filter(Boolean).slice(0, 50) });
-});
+}));
 
 module.exports = router;
