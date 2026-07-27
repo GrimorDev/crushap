@@ -35,9 +35,10 @@ class SwipeResult {
 }
 
 class MatchEntry {
-  const MatchEntry({required this.profile, this.lastMessageText});
+  const MatchEntry({required this.profile, this.lastMessageText, this.unread = false});
   final Profile profile;
   final String? lastMessageText;
+  final bool unread;
 }
 
 class LikeEntry {
@@ -171,6 +172,7 @@ class ApiClient {
     List<String>? tags,
     String? gender,
     String? lookingFor,
+    bool? showOnlineStatus,
     double? lat,
     double? lng,
   }) async {
@@ -184,6 +186,7 @@ class ApiClient {
       'tags': ?tags,
       'gender': ?gender,
       'lookingFor': ?lookingFor,
+      'showOnlineStatus': ?showOnlineStatus,
       'lat': ?lat,
       'lng': ?lng,
     };
@@ -281,7 +284,11 @@ class ApiClient {
     return (body['matches'] as List).map((e) {
       final map = e as Map<String, dynamic>;
       final lastMessage = map['lastMessage'] as Map<String, dynamic>?;
-      return MatchEntry(profile: Profile.fromJson(map), lastMessageText: lastMessage?['text'] as String?);
+      return MatchEntry(
+        profile: Profile.fromJson(map),
+        lastMessageText: lastMessage?['text'] as String?,
+        unread: map['unread'] as bool? ?? false,
+      );
     }).toList();
   }
 
@@ -292,6 +299,42 @@ class ApiClient {
       final map = e as Map<String, dynamic>;
       return LikeEntry(profile: Profile.fromJson(map), isNew: map['isNew'] as bool? ?? false);
     }).toList();
+  }
+
+  /// Who among `userIds` is currently online, as reported by the server
+  /// (real WebSocket connections — never fabricated — and only for
+  /// accounts that opted into showing it).
+  Future<Set<String>> onlineAmong(List<String> userIds) async {
+    if (userIds.isEmpty) return {};
+    final res = await http.get(_uri('/api/presence', {'ids': userIds.join(',')}), headers: _headers());
+    final body = await _decode(res);
+    return (body['online'] as List).map((e) => e as String).toSet();
+  }
+
+  Future<List<Profile>> blockedUsers() async {
+    final res = await http.get(_uri('/api/block'), headers: _headers());
+    final body = await _decode(res);
+    return (body['blocked'] as List).map((e) => Profile.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> blockUser(String targetId) async {
+    final res = await http.post(_uri('/api/block'), headers: _headers(), body: jsonEncode({'targetId': targetId}));
+    await _decode(res);
+  }
+
+  Future<void> unblockUser(String targetId) async {
+    final res = await http.delete(_uri('/api/block/$targetId'), headers: _headers());
+    await _decode(res);
+  }
+
+  /// `reason` is one of 'spam' / 'inappropriate' / 'fake_profile' / 'other'.
+  Future<void> reportUser(String targetId, String reason) async {
+    final res = await http.post(
+      _uri('/api/reports'),
+      headers: _headers(),
+      body: jsonEncode({'targetId': targetId, 'reason': reason}),
+    );
+    await _decode(res);
   }
 
   Future<List<ChatMessage>> chatHistory(String otherUserId) async {

@@ -14,6 +14,7 @@ router.get('/:otherUserId/messages', asyncHandler(async (req, res) => {
   }
   const chatId = chatStore.pairKey(req.userId, otherUserId);
   const messages = await chatStore.listMessages(chatId);
+  await chatStore.markRead(chatId, req.userId);
   res.json({ messages });
 }));
 

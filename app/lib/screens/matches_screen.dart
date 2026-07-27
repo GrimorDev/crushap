@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -38,6 +39,7 @@ class MatchesScreen extends StatefulWidget {
 
 class _MatchesScreenState extends State<MatchesScreen> {
   List<MatchEntry>? _matches;
+  Set<String> _online = {};
 
   @override
   void initState() {
@@ -49,6 +51,8 @@ class _MatchesScreenState extends State<MatchesScreen> {
     try {
       final matches = await widget.api.matches();
       if (mounted) setState(() => _matches = matches);
+      final online = await widget.api.onlineAmong([for (final m in matches) m.profile.id]);
+      if (mounted) setState(() => _online = online);
     } catch (_) {
       if (mounted) setState(() => _matches = const []);
     }
@@ -134,8 +138,8 @@ class _MatchesScreenState extends State<MatchesScreen> {
                                     CrushapAvatar(
                                       name: profile.name,
                                       size: CrushapAvatarSize.lg,
-                                      online: true,
-                                      image: photoUrl == null ? null : NetworkImage(photoUrl),
+                                      online: _online.contains(profile.id),
+                                      image: photoUrl == null ? null : CachedNetworkImageProvider(photoUrl),
                                     ),
                                     const SizedBox(height: 8),
                                     Text(

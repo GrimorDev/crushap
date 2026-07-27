@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' show TextField, InputDecoration, InputBorder, TextInputAction;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -11,6 +12,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
+import '../widgets/core/profile_action_sheet.dart';
 
 /// A single conversation thread, reached from ChatInboxScreen or
 /// MatchOverlay's "Send a Message" (pushed as a route, like FiltersScreen —
@@ -42,6 +44,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   List<ChatMessage>? _messages;
   ChatSocket? _socket;
+  bool _online = false;
   final _draftController = TextEditingController();
   final _scrollController = ScrollController();
 
@@ -51,6 +54,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _load();
+    widget.api.onlineAmong([widget.matchId]).then((online) {
+      if (mounted) setState(() => _online = online.contains(widget.matchId));
+    }).catchError((_) {});
   }
 
   Future<void> _load() async {
@@ -96,6 +102,27 @@ class _ChatScreenState extends State<ChatScreen> {
     _draftController.clear();
   }
 
+  Future<void> _openActions() async {
+    final action = await showProfileActionSheet(context, name: widget.matchName);
+    if (action == null || !mounted) return;
+    if (action == ProfileAction.block) {
+      try {
+        await widget.api.blockUser(widget.matchId);
+      } catch (_) {
+        // Fall through to onBack regardless — nothing useful to retry here.
+      }
+      widget.onBack();
+      return;
+    }
+    final reason = await showReportReasonSheet(context);
+    if (reason == null) return;
+    try {
+      await widget.api.reportUser(widget.matchId, reason);
+    } catch (_) {
+      // No inline confirmation surface in this header — silently drop.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
@@ -122,11 +149,17 @@ class _ChatScreenState extends State<ChatScreen> {
                   CrushapAvatar(
                     name: widget.matchName,
                     size: CrushapAvatarSize.sm,
-                    online: true,
-                    image: widget.matchPhotoUrl == null ? null : NetworkImage(widget.matchPhotoUrl!),
+                    online: _online,
+                    image: widget.matchPhotoUrl == null ? null : CachedNetworkImageProvider(widget.matchPhotoUrl!),
                   ),
                   const SizedBox(width: 12),
-                  Text(widget.matchName, style: CrushapText.title),
+                  Expanded(child: Text(widget.matchName, style: CrushapText.title)),
+                  CrushapIconButton(
+                    icon: 'more-vertical',
+                    label: t.moreOptionsLabel,
+                    variant: CrushapIconButtonVariant.ghost,
+                    onPressed: _openActions,
+                  ),
                 ],
               ),
             ),

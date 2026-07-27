@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/widgets.dart';
 import '../constants.dart';
@@ -467,7 +468,7 @@ class _PhotoGallery extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(CrushapRadii.lg),
                   border: i == 0 ? Border.all(color: CrushapColors.accentPrimary, width: 2) : null,
-                  image: DecorationImage(image: NetworkImage(entry.display), fit: BoxFit.cover),
+                  image: DecorationImage(image: CachedNetworkImageProvider(entry.display), fit: BoxFit.cover),
                 ),
               ),
               if (deleting)

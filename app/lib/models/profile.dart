@@ -13,6 +13,7 @@ class Profile {
     this.gender,
     this.lookingFor,
     this.photos = const [],
+    this.showOnlineStatus,
   });
 
   final String id;
@@ -29,6 +30,11 @@ class Profile {
   /// unset — shown as the status pill on the swipe card.
   final String? lookingFor;
   final List<String> photos;
+  /// Only ever present when this is the signed-in user's own profile
+  /// (`GET/PATCH /api/me`) — the server omits it from everyone else's
+  /// public profile shape, since it's a private preference, not something
+  /// other users need to see directly (they see its effect via presence).
+  final bool? showOnlineStatus;
 
   /// Formatted distance value only — the "X km away" phrasing is locale-
   /// dependent, so that part is added at the UI layer (AppLocalizations).
@@ -51,6 +57,7 @@ class Profile {
       gender: j['gender'] as String?,
       lookingFor: j['lookingFor'] as String?,
       photos: (j['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
+      showOnlineStatus: j['showOnlineStatus'] as bool?,
     );
   }
 }

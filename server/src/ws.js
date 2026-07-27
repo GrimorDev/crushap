@@ -4,6 +4,8 @@ const { verifyToken } = require('./auth');
 const { publisher, subscriber } = require('./redis');
 const swipesStore = require('./store/swipes');
 const chatStore = require('./store/chat');
+const moderation = require('./store/moderation');
+const presence = require('./presence');
 const { v4: uuid } = require('uuid');
 
 // chatId -> Set<ws>, in-process fan-out. Redis pub/sub is the layer that
@@ -58,6 +60,7 @@ function attachWebSocketServer(server) {
     }
     ws.userId = userId;
     ws.rooms = new Set();
+    presence.markOnline(userId);
 
     // Same reasoning as server/src/asyncHandler.js: an EventEmitter doesn't
     // catch rejections from an async listener either, so a Redis hiccup or
@@ -74,12 +77,14 @@ function attachWebSocketServer(server) {
 
         if (msg.type === 'join' && msg.matchId) {
           if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
+          if (await moderation.isBlockedEitherWay(userId, msg.matchId)) return;
           joinRoom(ws, chatStore.pairKey(userId, msg.matchId));
           return;
         }
 
         if (msg.type === 'message' && msg.matchId && typeof msg.text === 'string' && msg.text.trim()) {
           if (!(await swipesStore.isMatch(userId, msg.matchId))) return;
+          if (await moderation.isBlockedEitherWay(userId, msg.matchId)) return;
           const chatId = chatStore.pairKey(userId, msg.matchId);
           const message = { id: uuid(), fromUserId: userId, text: msg.text.trim(), ts: Date.now() };
           await chatStore.appendMessage(chatId, message);
@@ -90,7 +95,10 @@ function attachWebSocketServer(server) {
       }
     });
 
-    ws.on('close', () => leaveAllRooms(ws));
+    ws.on('close', () => {
+      leaveAllRooms(ws);
+      presence.markOffline(userId);
+    });
   });
 
   return wss;

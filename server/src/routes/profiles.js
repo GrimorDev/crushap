@@ -5,6 +5,7 @@ const fs = require('fs/promises');
 const { v4: uuid } = require('uuid');
 const users = require('../store/users');
 const swipes = require('../store/swipes');
+const moderation = require('../store/moderation');
 const { requireAuth } = require('../auth');
 const { uploadDir } = require('../config');
 const { asyncHandler } = require('../asyncHandler');
@@ -27,27 +28,34 @@ const upload = multer({
 
 router.use(requireAuth);
 
+// `showOnlineStatus` is a private preference (consulted by /api/presence),
+// not part of the public profile shape everyone else sees — added on top
+// of toPublicProfile only in these two self-only responses.
+function toSelfProfile(raw, photos) {
+  return { ...users.toPublicProfile(raw, { photos }), showOnlineStatus: raw.showOnlineStatus !== '0' };
+}
+
 router.get('/me', asyncHandler(async (req, res) => {
   const raw = await users.getUserRaw(req.userId);
   const photos = await users.getPhotos(req.userId);
-  res.json({ user: users.toPublicProfile(raw, { photos }) });
+  res.json({ user: toSelfProfile(raw, photos) });
 }));
 
 const VALID_GENDERS = new Set(['woman', 'man', 'nonbinary']);
 const VALID_LOOKING_FOR = new Set(['relationship', 'casual', 'friends', 'unsure']);
 
 router.patch('/me', asyncHandler(async (req, res) => {
-  const { name, bio, age, tags, gender, lookingFor, lat, lng } = req.body || {};
+  const { name, bio, age, tags, gender, lookingFor, showOnlineStatus, lat, lng } = req.body || {};
   if (gender != null && !VALID_GENDERS.has(gender)) {
     return res.status(400).json({ error: 'gender must be one of woman, man, nonbinary' });
   }
   if (lookingFor != null && !VALID_LOOKING_FOR.has(lookingFor)) {
     return res.status(400).json({ error: 'lookingFor must be one of relationship, casual, friends, unsure' });
   }
-  await users.updateUser(req.userId, { name, bio, age, tags, gender, lookingFor, lat, lng });
+  await users.updateUser(req.userId, { name, bio, age, tags, gender, lookingFor, showOnlineStatus, lat, lng });
   const raw = await users.getUserRaw(req.userId);
   const photos = await users.getPhotos(req.userId);
-  res.json({ user: users.toPublicProfile(raw, { photos }) });
+  res.json({ user: toSelfProfile(raw, photos) });
 }));
 
 const MAX_PHOTOS = 6;
@@ -88,11 +96,12 @@ const MIN_RESULTS = 5;
 const RELAX_ORDER = ['hasPhoto', 'tags', 'verifiedOnly', 'maxAge', 'maxDistanceKm'];
 
 router.get('/discover', asyncHandler(async (req, res) => {
-  const [allIds, swipedIds] = await Promise.all([
+  const [allIds, swipedIds, blockedIds] = await Promise.all([
     users.allUserIds(),
     swipes.swipedIds(req.userId),
+    moderation.exclusionSet(req.userId),
   ]);
-  const excluded = new Set([req.userId, ...swipedIds]);
+  const excluded = new Set([req.userId, ...swipedIds, ...blockedIds]);
   const candidateIds = allIds.filter((id) => !excluded.has(id));
 
   // Small deployments = small candidate pools; a plain shuffle is enough,
@@ -178,8 +187,8 @@ router.get('/discover', asyncHandler(async (req, res) => {
 
 router.get('/search', asyncHandler(async (req, res) => {
   const q = String(req.query.q || '').trim().toLowerCase();
-  const allIds = await users.allUserIds();
-  const candidateIds = allIds.filter((id) => id !== req.userId);
+  const [allIds, blockedIds] = await Promise.all([users.allUserIds(), moderation.exclusionSet(req.userId)]);
+  const candidateIds = allIds.filter((id) => id !== req.userId && !blockedIds.has(id));
 
   const profiles = await Promise.all(
     candidateIds.map(async (id) => {

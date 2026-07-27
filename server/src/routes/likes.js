@@ -1,6 +1,7 @@
 const express = require('express');
 const users = require('../store/users');
 const swipesStore = require('../store/swipes');
+const moderation = require('../store/moderation');
 const { requireAuth } = require('../auth');
 const { asyncHandler } = require('../asyncHandler');
 
@@ -12,10 +13,13 @@ router.use(requireAuth);
 const NEW_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 router.get('/', asyncHandler(async (req, res) => {
-  const entries = await swipesStore.listLikedBy(req.userId);
+  const [entries, blockedIds] = await Promise.all([
+    swipesStore.listLikedBy(req.userId),
+    moderation.exclusionSet(req.userId),
+  ]);
   const now = Date.now();
   const profiles = await Promise.all(
-    entries.map(async ({ id, likedAt }) => {
+    entries.filter(({ id }) => !blockedIds.has(id)).map(async ({ id, likedAt }) => {
       const [raw, photos] = await Promise.all([users.getUserRaw(id), users.getPhotos(id)]);
       if (!raw) return null;
       return { ...users.toPublicProfile(raw, { photos }), likedAt, isNew: now - likedAt < NEW_WINDOW_MS };

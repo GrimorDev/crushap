@@ -992,6 +992,72 @@ abstract class AppLocalizations {
   /// **'You haven\'t blocked anyone.'**
   String get privacyNoBlockedUsers;
 
+  /// No description provided for @unblockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockLabel;
+
+  /// No description provided for @moreOptionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptionsLabel;
+
+  /// No description provided for @blockUserAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Block {name}'**
+  String blockUserAction(String name);
+
+  /// No description provided for @reportUserAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {name}'**
+  String reportUserAction(String name);
+
+  /// No description provided for @reportReasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you reporting this profile?'**
+  String get reportReasonTitle;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In en, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonInappropriate.
+  ///
+  /// In en, this message translates to:
+  /// **'Inappropriate content'**
+  String get reportReasonInappropriate;
+
+  /// No description provided for @reportReasonFakeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Fake profile'**
+  String get reportReasonFakeProfile;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reportReasonOther;
+
+  /// No description provided for @userBlockedConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked. You won\'t see each other anymore.'**
+  String get userBlockedConfirmation;
+
+  /// No description provided for @userReportedConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks — we\'ve received your report.'**
+  String get userReportedConfirmation;
+
   /// No description provided for @subscriptionTitle.
   ///
   /// In en, this message translates to:

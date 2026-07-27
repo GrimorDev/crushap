@@ -30,6 +30,8 @@ app.use('/api', require('./routes/profiles'));
 app.use('/api/swipes', require('./routes/swipes'));
 app.use('/api/matches', require('./routes/matches'));
 app.use('/api/likes', require('./routes/likes'));
+app.use('/api', require('./routes/moderation'));
+app.use('/api/presence', require('./routes/presence'));
 app.use('/api/chat', require('./routes/chat'));
 
 app.use((err, req, res, next) => {

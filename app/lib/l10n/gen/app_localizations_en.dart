@@ -488,6 +488,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyNoBlockedUsers => 'You haven\'t blocked anyone.';
 
   @override
+  String get unblockLabel => 'Unblock';
+
+  @override
+  String get moreOptionsLabel => 'More options';
+
+  @override
+  String blockUserAction(String name) {
+    return 'Block $name';
+  }
+
+  @override
+  String reportUserAction(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String get reportReasonTitle => 'Why are you reporting this profile?';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Inappropriate content';
+
+  @override
+  String get reportReasonFakeProfile => 'Fake profile';
+
+  @override
+  String get reportReasonOther => 'Other';
+
+  @override
+  String get userBlockedConfirmation =>
+      'Blocked. You won\'t see each other anymore.';
+
+  @override
+  String get userReportedConfirmation =>
+      'Thanks — we\'ve received your report.';
+
+  @override
   String get subscriptionTitle => 'Subscription';
 
   @override

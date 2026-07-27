@@ -492,6 +492,45 @@ class AppLocalizationsPl extends AppLocalizations {
   String get privacyNoBlockedUsers => 'Nikogo jeszcze nie zablokowano.';
 
   @override
+  String get unblockLabel => 'Odblokuj';
+
+  @override
+  String get moreOptionsLabel => 'Więcej opcji';
+
+  @override
+  String blockUserAction(String name) {
+    return 'Zablokuj $name';
+  }
+
+  @override
+  String reportUserAction(String name) {
+    return 'Zgłoś $name';
+  }
+
+  @override
+  String get reportReasonTitle => 'Dlaczego zgłaszasz ten profil?';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Nieodpowiednia treść';
+
+  @override
+  String get reportReasonFakeProfile => 'Fałszywy profil';
+
+  @override
+  String get reportReasonOther => 'Coś innego';
+
+  @override
+  String get userBlockedConfirmation =>
+      'Zablokowano. Nie zobaczycie się już nawzajem.';
+
+  @override
+  String get userReportedConfirmation =>
+      'Dzięki — zgłoszenie zostało przyjęte.';
+
+  @override
   String get subscriptionTitle => 'Subskrypcja';
 
   @override

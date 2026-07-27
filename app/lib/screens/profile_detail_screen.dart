@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
@@ -8,6 +9,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
+import '../widgets/core/profile_action_sheet.dart';
 
 /// The full-profile view the reference design's "About Me" screen implied
 /// but the swipe card alone (name + one-line bio + a few tags) never had
@@ -32,6 +34,35 @@ class ProfileDetailScreen extends StatefulWidget {
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   int _photoIndex = 0;
+  bool _busy = false;
+  String? _confirmation;
+
+  Future<void> _openActions() async {
+    final t = AppLocalizations.of(context)!;
+    final action = await showProfileActionSheet(context, name: widget.profile.name);
+    if (action == null || !mounted) return;
+    if (action == ProfileAction.block) {
+      setState(() => _busy = true);
+      try {
+        await widget.api.blockUser(widget.profile.id);
+        widget.onBack();
+      } catch (_) {
+        if (mounted) setState(() => _busy = false);
+      }
+      return;
+    }
+    final reason = await showReportReasonSheet(context);
+    if (reason == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      await widget.api.reportUser(widget.profile.id, reason);
+      if (mounted) setState(() => _confirmation = t.userReportedConfirmation);
+    } catch (_) {
+      // Leave silently — the user can try again from the menu.
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   String _lookingForLabel(AppLocalizations t, String value) => switch (value) {
     'relationship' => t.lookingForRelationship,
@@ -77,12 +108,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         fit: StackFit.expand,
                         children: [
                           if (photoUrl != null)
-                            Image.network(
-                              photoUrl,
+                            CachedNetworkImage(
+                              imageUrl: photoUrl,
                               key: ValueKey(photoUrl),
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stack) =>
-                                  const _PhotoPlaceholder(),
+                              fadeInDuration: Duration.zero,
+                              errorWidget: (context, url, error) => const _PhotoPlaceholder(),
+                              placeholder: (context, url) => const _PhotoPlaceholder(),
                             )
                           else
                             const _PhotoPlaceholder(),
@@ -139,6 +171,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               onPressed: widget.onBack,
                             ),
                           ),
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: CrushapIconButton(
+                              icon: 'more-vertical',
+                              label: t.moreOptionsLabel,
+                              variant: CrushapIconButtonVariant.ghost,
+                              size: CrushapIconButtonSize.sm,
+                              onPressed: _busy ? null : _openActions,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -147,6 +190,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (_confirmation != null) ...[
+                            Row(
+                              children: [
+                                const CrushapIcon('shield-check', size: 14, color: CrushapColors.accentPrimary),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    _confirmation!,
+                                    style: CrushapText.bodySm.copyWith(color: CrushapColors.textSecondary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,

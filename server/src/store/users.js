@@ -46,6 +46,7 @@ async function updateUser(id, fields) {
   if (fields.tags != null) patch.tags = JSON.stringify(fields.tags);
   if (fields.gender != null) patch.gender = fields.gender;
   if (fields.lookingFor != null) patch.lookingFor = fields.lookingFor;
+  if (fields.showOnlineStatus != null) patch.showOnlineStatus = fields.showOnlineStatus ? '1' : '0';
   if (Object.keys(patch).length) await redis.hset(userKey(id), patch);
   if (fields.lat != null && fields.lng != null) {
     await redis.geoadd('geo:users', fields.lng, fields.lat, id);

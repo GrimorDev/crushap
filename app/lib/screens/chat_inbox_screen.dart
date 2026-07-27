@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -32,6 +33,7 @@ class ChatInboxScreen extends StatefulWidget {
 
 class _ChatInboxScreenState extends State<ChatInboxScreen> {
   List<MatchEntry>? _matches;
+  Set<String> _online = {};
 
   @override
   void initState() {
@@ -43,6 +45,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     try {
       final matches = await widget.api.matches();
       if (mounted) setState(() => _matches = matches);
+      final online = await widget.api.onlineAmong([for (final m in matches) m.profile.id]);
+      if (mounted) setState(() => _online = online);
     } catch (_) {
       if (mounted) setState(() => _matches = const []);
     }
@@ -104,8 +108,8 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                       CrushapAvatar(
                                         name: profile.name,
                                         size: CrushapAvatarSize.md,
-                                        online: true,
-                                        image: photoUrl == null ? null : NetworkImage(photoUrl),
+                                        online: _online.contains(profile.id),
+                                        image: photoUrl == null ? null : CachedNetworkImageProvider(photoUrl),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
@@ -118,11 +122,25 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                               preview,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: CrushapText.bodySm.copyWith(color: CrushapColors.textTertiary),
+                                              style: CrushapText.bodySm.copyWith(
+                                                color: entry.unread ? CrushapColors.textPrimary : CrushapColors.textTertiary,
+                                                fontWeight: entry.unread ? FontWeight.w600 : FontWeight.w400,
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
+                                      if (entry.unread) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          width: 9,
+                                          height: 9,
+                                          decoration: const BoxDecoration(
+                                            color: CrushapColors.accentPrimary,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
