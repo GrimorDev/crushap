@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'l10n/gen/app_localizations.dart';
 import 'models/profile.dart';
@@ -28,7 +27,7 @@ void main() {
 }
 
 ImageProvider? _networkImage(String? url) =>
-    url == null ? null : CachedNetworkImageProvider(url);
+    url == null ? null : NetworkImage(url);
 
 class CrushapApp extends StatefulWidget {
   const CrushapApp({super.key});

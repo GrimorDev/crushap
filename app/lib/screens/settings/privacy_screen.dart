@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/widgets.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../models/profile.dart';
@@ -167,7 +166,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
                               size: CrushapAvatarSize.sm,
                               image: widget.api.mediaUrl(p.photos.isNotEmpty ? p.photos.first : null) == null
                                   ? null
-                                  : CachedNetworkImageProvider(widget.api.mediaUrl(p.photos.first)!),
+                                  : NetworkImage(widget.api.mediaUrl(p.photos.first)!),
                             ),
                             const SizedBox(width: 12),
                             Expanded(child: Text(p.name, style: CrushapText.body)),

@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' show TextField, InputDecoration, InputBorder, TextInputAction;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -150,7 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     name: widget.matchName,
                     size: CrushapAvatarSize.sm,
                     online: _online,
-                    image: widget.matchPhotoUrl == null ? null : CachedNetworkImageProvider(widget.matchPhotoUrl!),
+                    image: widget.matchPhotoUrl == null ? null : NetworkImage(widget.matchPhotoUrl!),
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: Text(widget.matchName, style: CrushapText.title)),

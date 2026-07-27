@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart' show RefreshIndicator;
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
@@ -109,7 +108,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
                                         name: profile.name,
                                         size: CrushapAvatarSize.md,
                                         online: _online.contains(profile.id),
-                                        image: photoUrl == null ? null : CachedNetworkImageProvider(photoUrl),
+                                        image: photoUrl == null ? null : NetworkImage(photoUrl),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(

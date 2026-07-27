@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
@@ -281,7 +280,7 @@ class _LikeCard extends StatelessWidget {
               image: photoUrl == null
                   ? null
                   : DecorationImage(
-                      image: CachedNetworkImageProvider(photoUrl!),
+                      image: NetworkImage(photoUrl!),
                       fit: BoxFit.cover,
                     ),
             ),

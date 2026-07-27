@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/widgets.dart';
 import '../../theme/colors.dart';
 import '../../theme/effects.dart';
@@ -82,13 +81,12 @@ class CrushapSwipeCard extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           if (photoUrl != null)
-            CachedNetworkImage(
-              imageUrl: photoUrl,
+            Image.network(
+              photoUrl,
               key: ValueKey(photoUrl),
               fit: BoxFit.cover,
-              fadeInDuration: Duration.zero,
-              errorWidget: (context, url, error) => const _PhotoPlaceholder(),
-              placeholder: (context, url) => const _PhotoPlaceholder(),
+              errorBuilder: (context, error, stack) => const _PhotoPlaceholder(),
+              loadingBuilder: (context, child, progress) => progress == null ? child : const _PhotoPlaceholder(),
             )
           else
             const _PhotoPlaceholder(),

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/widgets.dart';
 import '../l10n/gen/app_localizations.dart';
 import '../models/profile.dart';
@@ -133,7 +132,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                   size: CrushapAvatarSize.md,
                                   image: photoUrl == null
                                       ? null
-                                      : CachedNetworkImageProvider(photoUrl),
+                                      : NetworkImage(photoUrl),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(

@@ -45,9 +45,6 @@ dependencies:
   web_socket_channel: ^3.0.1
   shared_preferences: ^2.3.2
   image_picker: ^1.1.2
-  # Disk-caches profile/swipe-card photos so revisiting a candidate or
-  # scrolling back through a thread doesn't re-fetch the same image.
-  cached_network_image: ^3.4.1
 
   # Polish + English UI copy (see lib/l10n/).
   flutter_localizations:
