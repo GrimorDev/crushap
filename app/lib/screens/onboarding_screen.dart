@@ -15,6 +15,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/orbit_background.dart';
 import '../widgets/core/photo_source_sheet.dart';
 import '../widgets/forms/app_input.dart';
 
@@ -362,28 +363,38 @@ class _WelcomeSlideState extends State<_WelcomeSlide> with SingleTickerProviderS
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AnimatedBuilder(
-          animation: _pulse,
-          builder: (context, child) {
-            final t = Curves.easeInOut.transform(_pulse.value);
-            return Transform.scale(
-              scale: 1 + t * 0.06,
-              child: Container(
-                width: 96,
-                height: 96,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: CrushapColors.gradientPrimary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: CrushapColors.accentGlow, blurRadius: 24 + t * 24, spreadRadius: t * 4),
-                  ],
-                ),
-                child: child,
+        SizedBox(
+          width: 200,
+          height: 200,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const CrushapOrbitBackground(size: 200),
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, child) {
+                  final t = Curves.easeInOut.transform(_pulse.value);
+                  return Transform.scale(
+                    scale: 1 + t * 0.06,
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: CrushapColors.gradientPrimary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: CrushapColors.accentGlow, blurRadius: 24 + t * 24, spreadRadius: t * 4),
+                        ],
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+                child: CrushapIcon(widget.data.icon, size: 40, color: CrushapColors.textPrimary),
               ),
-            );
-          },
-          child: CrushapIcon(widget.data.icon, size: 40, color: CrushapColors.textPrimary),
+            ],
+          ),
         ),
         const SizedBox(height: 28),
         Text(widget.data.title, style: CrushapText.displayXl),

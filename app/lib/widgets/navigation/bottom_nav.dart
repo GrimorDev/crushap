@@ -33,7 +33,7 @@ class CrushapBottomNav extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 14, 8, 14),
           decoration: const BoxDecoration(
-            color: Color(0xB8130D17), // rgba(19,13,23,.72)
+            color: Color(0xB8170D2B), // rgba(23,13,43,.72)
             border: Border(top: BorderSide(color: CrushapColors.borderSubtle)),
           ),
           child: SafeArea(

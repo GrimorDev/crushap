@@ -6,6 +6,7 @@ import '../../theme/effects.dart';
 import '../../theme/typography.dart';
 import '../core/app_avatar.dart';
 import '../core/app_button.dart';
+import '../core/orbit_background.dart';
 
 /// Ported from components/dating/MatchOverlay.jsx.
 class CrushapMatchOverlay extends StatelessWidget {
@@ -63,30 +64,40 @@ class CrushapMatchOverlay extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
-                  // Two 112px avatars overlapping by 20px, per the source's
-                  // `marginRight: -20` on the first.
-                  width: 204,
-                  height: 112,
+                  width: 260,
+                  height: 260,
                   child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Positioned(
-                        left: 0,
-                        child: DecoratedBox(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: CrushapEffects.shadowGlowPrimary,
-                          ),
-                          child: CrushapAvatar(name: 'You', size: CrushapAvatarSize.xl, image: youPhoto),
-                        ),
-                      ),
-                      Positioned(
-                        left: 92,
-                        child: DecoratedBox(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: CrushapEffects.shadowGlowPrimary,
-                          ),
-                          child: CrushapAvatar(name: matchName, size: CrushapAvatarSize.xl, image: matchPhoto),
+                      const CrushapOrbitBackground(size: 260),
+                      // Two 112px avatars overlapping by 20px, per the
+                      // source's `marginRight: -20` on the first.
+                      SizedBox(
+                        width: 204,
+                        height: 112,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 0,
+                              child: DecoratedBox(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: CrushapEffects.shadowGlowPrimary,
+                                ),
+                                child: CrushapAvatar(name: 'You', size: CrushapAvatarSize.xl, image: youPhoto),
+                              ),
+                            ),
+                            Positioned(
+                              left: 92,
+                              child: DecoratedBox(
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: CrushapEffects.shadowGlowPrimary,
+                                ),
+                                child: CrushapAvatar(name: matchName, size: CrushapAvatarSize.xl, image: matchPhoto),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
