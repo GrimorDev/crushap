@@ -81,6 +81,43 @@ router.delete('/me/photos', asyncHandler(async (req, res) => {
   res.status(204).end();
 }));
 
+const uploadVideo = multer({
+  storage: multer.diskStorage({
+    destination: uploadDir,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname || '').toLowerCase() || '.mp4';
+      cb(null, `${uuid()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 40 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    cb(null, /^video\//.test(file.mimetype));
+  },
+});
+
+// One optional intro video per profile, not a gallery — uploading a new
+// one replaces whatever was there before (mirrors how a real profile-video
+// slot behaves elsewhere, and keeps storage from growing unbounded).
+router.post('/me/video', uploadVideo.single('video'), asyncHandler(async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No video file under field "video"' });
+  const raw = await users.getUserRaw(req.userId);
+  if (raw?.videoUrl) {
+    await fs.unlink(path.join(uploadDir, path.basename(raw.videoUrl))).catch(() => {});
+  }
+  const url = `/uploads/${req.file.filename}`;
+  await users.setVideo(req.userId, url);
+  res.status(201).json({ url });
+}));
+
+router.delete('/me/video', asyncHandler(async (req, res) => {
+  const raw = await users.getUserRaw(req.userId);
+  if (raw?.videoUrl) {
+    await fs.unlink(path.join(uploadDir, path.basename(raw.videoUrl))).catch(() => {});
+  }
+  await users.removeVideo(req.userId);
+  res.status(204).end();
+}));
+
 const GENDER_SHOW_ME = { women: 'woman', men: 'man' }; // 'everyone' (or absent) = no filter
 
 // Discovery is meant to prioritize real proximity, but a strict filter

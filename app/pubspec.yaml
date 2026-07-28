@@ -45,6 +45,8 @@ dependencies:
   web_socket_channel: ^3.0.1
   shared_preferences: ^2.3.2
   image_picker: ^1.1.2
+  # Plays the optional profile intro video (see /api/me/video).
+  video_player: ^2.9.2
 
   # Polish + English UI copy (see lib/l10n/).
   flutter_localizations:

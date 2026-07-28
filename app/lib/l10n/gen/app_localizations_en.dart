@@ -149,6 +149,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get locatingLabel => 'Locating…';
 
   @override
+  String get locationRefreshFailed =>
+      'Couldn\'t get your location. Check permissions and try again.';
+
+  @override
   String get welcomeBack => 'Welcome back';
 
   @override
@@ -396,6 +400,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removePhotoLabel => 'Remove photo';
+
+  @override
+  String get videoSection => 'Intro video';
+
+  @override
+  String get addVideoLabel => 'Add video';
+
+  @override
+  String get removeVideoLabel => 'Remove video';
 
   @override
   String get verifiedBadge => 'Verified';

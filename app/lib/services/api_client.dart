@@ -21,6 +21,14 @@ MediaType _imageMediaType(String filename) {
   return MediaType('image', 'jpeg');
 }
 
+MediaType _videoMediaType(String filename) {
+  final lower = filename.toLowerCase();
+  if (lower.endsWith('.mov')) return MediaType('video', 'quicktime');
+  if (lower.endsWith('.webm')) return MediaType('video', 'webm');
+  if (lower.endsWith('.3gp')) return MediaType('video', '3gpp');
+  return MediaType('video', 'mp4');
+}
+
 class ApiException implements Exception {
   ApiException(this.message);
   final String message;
@@ -224,6 +232,32 @@ class ApiClient {
     final req = http.Request('DELETE', _uri('/api/me/photos'));
     req.headers.addAll(_headers());
     req.body = jsonEncode({'url': url});
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode >= 200 && res.statusCode < 300) return;
+    await _decode(res);
+  }
+
+  /// Uploads (and replaces, if one already exists) the profile's single
+  /// optional intro video.
+  Future<String> uploadVideo(Uint8List bytes, String filename) async {
+    final req = http.MultipartRequest('POST', _uri('/api/me/video'));
+    req.headers.addAll(_headers(json: false));
+    req.files.add(http.MultipartFile.fromBytes(
+      'video',
+      bytes,
+      filename: filename,
+      contentType: _videoMediaType(filename),
+    ));
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    final body = await _decode(res);
+    return body['url'] as String;
+  }
+
+  Future<void> deleteVideo() async {
+    final req = http.Request('DELETE', _uri('/api/me/video'));
+    req.headers.addAll(_headers());
     final streamed = await req.send();
     final res = await http.Response.fromStream(streamed);
     if (res.statusCode >= 200 && res.statusCode < 300) return;

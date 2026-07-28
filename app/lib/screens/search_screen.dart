@@ -8,6 +8,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/forms/app_input.dart';
 import '../widgets/navigation/bottom_nav.dart';
 
@@ -93,7 +94,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             Expanded(
               child: _loading
-                  ? const SizedBox.shrink()
+                  ? const CrushapLoading()
                   : _results.isEmpty
                   ? Center(
                       child: Text(

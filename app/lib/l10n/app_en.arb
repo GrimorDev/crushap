@@ -46,6 +46,7 @@
   "locationSharedConfirmation": "Got it — distances will be shown accurately.",
   "shareMyLocation": "Share my location",
   "locatingLabel": "Locating…",
+  "locationRefreshFailed": "Couldn't get your location. Check permissions and try again.",
 
   "welcomeBack": "Welcome back",
   "logIn": "Log in",
@@ -137,6 +138,9 @@
   "editPhotoLabel": "Edit photo",
   "addPhotoLabel": "Add photo",
   "removePhotoLabel": "Remove photo",
+  "videoSection": "Intro video",
+  "addVideoLabel": "Add video",
+  "removeVideoLabel": "Remove video",
   "verifiedBadge": "Verified",
   "languageRow": "Language",
   "languageSystem": "System",

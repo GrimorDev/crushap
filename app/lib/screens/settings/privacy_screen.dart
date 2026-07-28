@@ -8,6 +8,7 @@ import '../../theme/spacing.dart';
 import '../../theme/typography.dart';
 import '../../widgets/core/app_avatar.dart';
 import '../../widgets/core/app_icon.dart';
+import '../../widgets/core/app_loading.dart';
 import '../../widgets/core/settings_scaffold.dart';
 
 class PrivacyScreen extends StatefulWidget {
@@ -120,7 +121,7 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
             ),
             const SizedBox(height: 12),
             if (_blocked == null)
-              const SizedBox.shrink()
+              const CrushapLoading()
             else if (_blocked!.isEmpty)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),

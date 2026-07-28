@@ -237,48 +237,63 @@ class _CrushapAppState extends State<CrushapApp> {
             );
     }
 
-    final Widget mainScreen = switch (_tab) {
-      CrushapNavTab.discover => DiscoverScreen(
-        key: ValueKey('discover-$_filtersVersion'),
-        api: api,
-        onMatch: _onMatch,
-        onOpenFilters: _openFilters,
-        onOpenProfile: _openProfileDetail,
-        activeTab: _tab,
-        onTabChanged: _onTabChanged,
-      ),
-      CrushapNavTab.chat => ChatInboxScreen(
-        api: api,
-        onOpenThread: _openThread,
-        activeTab: _tab,
-        onTabChanged: _onTabChanged,
-      ),
-      CrushapNavTab.profile => ProfileScreen(
-        session: session,
-        api: api,
-        activeTab: _tab,
-        onTabChanged: _onTabChanged,
-        onOpenServerSettings: _openServerSettings,
-        onOpenNotifications: _openNotifications,
-        onOpenPrivacy: _openPrivacy,
-        onOpenSubscription: _openSubscription,
-        onLogout: _logout,
-        onLocaleChanged: _onLocaleChanged,
-      ),
-      CrushapNavTab.search => SearchScreen(
-        api: api,
-        onOpenProfile: _openProfileDetail,
-        activeTab: _tab,
-        onTabChanged: _onTabChanged,
-      ),
-      CrushapNavTab.matches => MatchesScreen(
-        api: api,
-        onOpenThread: _openThread,
-        onOpenLikes: _openLikes,
-        activeTab: _tab,
-        onTabChanged: _onTabChanged,
-      ),
-    };
+    // IndexedStack instead of picking one screen per switch/case: every tab
+    // stays mounted once built, so switching back to Discover/Chat/etc.
+    // shows it exactly as you left it (scroll position, already-fetched
+    // data) instead of a full teardown-and-refetch on every tap — that
+    // rebuild-from-scratch was a real source of the app feeling sluggish.
+    // Discover keeps its own ValueKey so bumping _filtersVersion after the
+    // Filters sheet closes still forces *that one* screen to remount and
+    // re-fetch, independent of this.
+    final Widget mainScreen = IndexedStack(
+      index: _tab.index,
+      children: [
+        DiscoverScreen(
+          key: ValueKey('discover-$_filtersVersion'),
+          api: api,
+          onMatch: _onMatch,
+          onOpenFilters: _openFilters,
+          onOpenProfile: _openProfileDetail,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+        ),
+        SearchScreen(
+          key: const ValueKey('search'),
+          api: api,
+          onOpenProfile: _openProfileDetail,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+        ),
+        MatchesScreen(
+          key: const ValueKey('matches'),
+          api: api,
+          onOpenThread: _openThread,
+          onOpenLikes: _openLikes,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+        ),
+        ChatInboxScreen(
+          key: const ValueKey('chat'),
+          api: api,
+          onOpenThread: _openThread,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+        ),
+        ProfileScreen(
+          key: const ValueKey('profile'),
+          session: session,
+          api: api,
+          activeTab: _tab,
+          onTabChanged: _onTabChanged,
+          onOpenServerSettings: _openServerSettings,
+          onOpenNotifications: _openNotifications,
+          onOpenPrivacy: _openPrivacy,
+          onOpenSubscription: _openSubscription,
+          onLogout: _logout,
+          onLocaleChanged: _onLocaleChanged,
+        ),
+      ],
+    );
 
     return Stack(
       children: [

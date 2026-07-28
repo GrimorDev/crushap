@@ -6,6 +6,7 @@ import '../theme/colors.dart';
 import '../theme/spacing.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/core/settings_scaffold.dart';
 
 /// The "Likes" screen from the Badoo reference — everyone who's liked or
@@ -99,7 +100,7 @@ class _LikesScreenState extends State<LikesScreen> {
           ),
           Expanded(
             child: visible == null
-                ? const SizedBox.shrink()
+                ? const CrushapLoading()
                 : visible.isEmpty
                 ? Center(
                     child: Padding(

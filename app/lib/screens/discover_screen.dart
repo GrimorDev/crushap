@@ -9,6 +9,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/dating/swipe_card.dart';
 import '../widgets/forms/app_input.dart';
 import '../widgets/navigation/bottom_nav.dart';
@@ -349,7 +350,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ],
                 ),
               ),
-            Expanded(child: Center(child: _buildBody(t, stamp))),
+            Expanded(
+              child: Center(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Was hardcoded to 340x440 regardless of device width —
+                    // fine on the one viewport size it was designed on, but
+                    // left an awkward gap on wider phones and could crowd
+                    // narrower ones. Now derived from what's actually
+                    // available, clamped to a sane range.
+                    final cardWidth = (constraints.maxWidth - 32).clamp(260.0, 400.0);
+                    final cardHeight = cardWidth * (440 / 340);
+                    return _buildBody(t, stamp, cardWidth, cardHeight);
+                  },
+                ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 4, 0, 20),
               child: Row(
@@ -410,15 +426,26 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   Widget _buildBody(
     AppLocalizations t,
     ({String label, Color color, Alignment align})? stamp,
+    double cardWidth,
+    double cardHeight,
   ) {
     if (_loading) {
-      return Text(
-        t.findingPeopleNearby,
-        style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CrushapLoading(),
+          const SizedBox(height: 16),
+          Text(
+            t.findingPeopleNearby,
+            style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+          ),
+        ],
       );
     }
     if (_loadError != null) {
       return _MessageCard(
+        width: cardWidth,
+        height: cardHeight,
         icon: 'zap',
         title: t.discoverLoadErrorTitle,
         message: _loadError!,
@@ -428,6 +455,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
     if (_current == null) {
       return _MessageCard(
+        width: cardWidth,
+        height: cardHeight,
         icon: 'sparkles',
         title: t.allCaughtUpTitle,
         message: t.allCaughtUpMessage,
@@ -435,12 +464,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         onAction: _load,
       );
     }
-    return _buildCard(t, stamp);
+    return _buildCard(t, stamp, cardWidth, cardHeight);
   }
 
   Widget _buildCard(
     AppLocalizations t,
     ({String label, Color color, Alignment align})? stamp,
+    double cardWidth,
+    double cardHeight,
   ) {
     final angle = (_drag.dx / 300).clamp(-0.5, 0.5);
     final current = _current!;
@@ -461,8 +492,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           cb?.call();
         },
         child: SizedBox(
-          width: 340,
-          height: 440,
+          width: cardWidth,
+          height: cardHeight,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -479,6 +510,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 statusIcon: badge?.icon,
                 onExpand: () => widget.onOpenProfile(current),
                 expandLabel: t.viewProfileLabel,
+                hasVideo: current.videoUrl != null,
                 bio: current.bio,
                 tags: current.tags,
                 photoUrls: [
@@ -492,8 +524,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     count - 1,
                   );
                 }),
-                width: 340,
-                height: 440,
+                width: cardWidth,
+                height: cardHeight,
               ),
               if (stamp != null)
                 Positioned.fill(
@@ -640,6 +672,8 @@ class _Stamp extends StatelessWidget {
 
 class _MessageCard extends StatelessWidget {
   const _MessageCard({
+    required this.width,
+    required this.height,
     required this.icon,
     required this.title,
     required this.message,
@@ -647,6 +681,8 @@ class _MessageCard extends StatelessWidget {
     required this.onAction,
   });
 
+  final double width;
+  final double height;
   final String icon;
   final String title;
   final String message;
@@ -656,8 +692,8 @@ class _MessageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 340,
-      height: 440,
+      width: width,
+      height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(CrushapRadii.xl),

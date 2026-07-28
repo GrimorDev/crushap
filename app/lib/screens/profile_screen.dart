@@ -13,8 +13,10 @@ import '../theme/typography.dart';
 import '../widgets/core/app_button.dart';
 import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/core/language_sheet.dart';
 import '../widgets/core/photo_source_sheet.dart';
+import '../widgets/core/video_preview.dart';
 import '../widgets/forms/app_input.dart';
 import '../widgets/navigation/bottom_nav.dart';
 
@@ -58,6 +60,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _saving = false;
   bool _uploadingPhoto = false;
   String? _deletingPhotoUrl;
+  bool _uploadingVideo = false;
+  bool _deletingVideo = false;
+  String? _error;
   late final _bioController = TextEditingController();
   final Set<String> _editTags = {};
   String? _editGender;
@@ -97,7 +102,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _save() async {
-    setState(() => _saving = true);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
     try {
       final updated = await widget.api.updateMe(
         bio: _bioController.text.trim(),
@@ -110,7 +118,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _editing = false;
       });
     } catch (_) {
-      // Keep the edit sheet open so the user can retry.
+      // Keep the edit sheet open so the user can retry — but say so, since
+      // a silent no-op here reads as "the save button doesn't work".
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -122,27 +132,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (source == null) return;
     final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
     if (file == null) return;
-    setState(() => _uploadingPhoto = true);
+    setState(() {
+      _uploadingPhoto = true;
+      _error = null;
+    });
     try {
       final Uint8List bytes = await file.readAsBytes();
       await widget.api.uploadPhoto(bytes, file.name);
       await _load();
     } catch (_) {
-      // Ignore — the gallery just stays whatever it was.
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
     } finally {
       if (mounted) setState(() => _uploadingPhoto = false);
     }
   }
 
   Future<void> _removePhoto(String url) async {
-    setState(() => _deletingPhotoUrl = url);
+    setState(() {
+      _deletingPhotoUrl = url;
+      _error = null;
+    });
     try {
       await widget.api.deletePhoto(url);
       await _load();
     } catch (_) {
-      // Leave it in place — the user can retry.
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
     } finally {
       if (mounted) setState(() => _deletingPhotoUrl = null);
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    final source = await showPhotoSourceSheet(context);
+    if (source == null) return;
+    final file = await ImagePicker().pickVideo(source: source, maxDuration: const Duration(seconds: 30));
+    if (file == null) return;
+    setState(() {
+      _uploadingVideo = true;
+      _error = null;
+    });
+    try {
+      final Uint8List bytes = await file.readAsBytes();
+      await widget.api.uploadVideo(bytes, file.name);
+      await _load();
+    } catch (_) {
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
+    } finally {
+      if (mounted) setState(() => _uploadingVideo = false);
+    }
+  }
+
+  Future<void> _removeVideo() async {
+    setState(() {
+      _deletingVideo = true;
+      _error = null;
+    });
+    try {
+      await widget.api.deleteVideo();
+      await _load();
+    } catch (_) {
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.genericNetworkError);
+    } finally {
+      if (mounted) setState(() => _deletingVideo = false);
     }
   }
 
@@ -164,7 +215,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: me == null
-                  ? const SizedBox.shrink()
+                  ? const CrushapLoading()
                   : SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                       child: Column(
@@ -183,6 +234,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ],
                           ),
+                          if (_error != null) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                const CrushapIcon('zap', size: 14, color: CrushapColors.red1),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    _error!,
+                                    style: CrushapText.bodySm.copyWith(color: CrushapColors.red1),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           const SizedBox(height: 16),
                           _PhotoGallery(
                             photos: [for (final p in me.photos) (raw: p, display: widget.api.mediaUrl(p)!)],
@@ -192,6 +258,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             onRemove: _removePhoto,
                             addLabel: t.addPhotoLabel,
                             removeLabel: t.removePhotoLabel,
+                          ),
+                          const SizedBox(height: 16),
+                          _VideoSection(
+                            videoUrl: me.videoUrl == null ? null : widget.api.mediaUrl(me.videoUrl),
+                            uploading: _uploadingVideo,
+                            deleting: _deletingVideo,
+                            onAdd: _pickVideo,
+                            onRemove: _removeVideo,
+                            sectionLabel: t.videoSection,
+                            addLabel: t.addVideoLabel,
+                            removeLabel: t.removeVideoLabel,
                           ),
                           const SizedBox(height: 28),
                           if (_editing) ..._buildEditor(t) else ..._buildReadonly(me, t),
@@ -442,7 +519,7 @@ class _PhotoGallery extends StatelessWidget {
                   border: Border.all(color: CrushapColors.borderSubtle),
                 ),
                 child: uploading
-                    ? const CrushapIcon('camera', size: 22, color: CrushapColors.textTertiary)
+                    ? const CrushapLoading(size: 20)
                     : Semantics(
                         label: addLabel,
                         button: true,
@@ -477,6 +554,7 @@ class _PhotoGallery extends StatelessWidget {
                       color: CrushapColors.overlayScrim,
                       borderRadius: BorderRadius.circular(CrushapRadii.lg),
                     ),
+                    child: const CrushapLoading(size: 18),
                   ),
                 ),
               if (!deleting)
@@ -506,6 +584,101 @@ class _PhotoGallery extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// A single optional intro video — same "one slot, add or replace" model
+/// as the reference apps use, rather than a whole video gallery.
+class _VideoSection extends StatelessWidget {
+  const _VideoSection({
+    required this.videoUrl,
+    required this.uploading,
+    required this.deleting,
+    required this.onAdd,
+    required this.onRemove,
+    required this.sectionLabel,
+    required this.addLabel,
+    required this.removeLabel,
+  });
+
+  final String? videoUrl;
+  final bool uploading;
+  final bool deleting;
+  final VoidCallback onAdd;
+  final VoidCallback onRemove;
+  final String sectionLabel;
+  final String addLabel;
+  final String removeLabel;
+
+  static const _tile = 120.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel(sectionLabel),
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(CrushapRadii.lg),
+          child: SizedBox(
+            width: _tile,
+            height: _tile,
+            child: videoUrl == null
+                ? GestureDetector(
+                    onTap: uploading ? null : onAdd,
+                    child: Container(
+                      color: CrushapColors.surfaceCard,
+                      alignment: Alignment.center,
+                      child: uploading
+                          ? const CrushapLoading(size: 20)
+                          : Semantics(
+                              label: addLabel,
+                              button: true,
+                              child: const CrushapIcon('camera', size: 24, color: CrushapColors.textTertiary),
+                            ),
+                    ),
+                  )
+                : Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CrushapVideoPreview(url: videoUrl!),
+                      if (deleting)
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: const BoxDecoration(color: CrushapColors.overlayScrim),
+                            child: const CrushapLoading(size: 18),
+                          ),
+                        ),
+                      if (!deleting)
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: GestureDetector(
+                            onTap: onRemove,
+                            child: Semantics(
+                              label: removeLabel,
+                              button: true,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                alignment: Alignment.center,
+                                decoration: const BoxDecoration(
+                                  color: CrushapColors.surfaceApp,
+                                  shape: BoxShape.circle,
+                                  border: Border.fromBorderSide(BorderSide(color: CrushapColors.borderStrong)),
+                                ),
+                                child: const CrushapIcon('x', size: 11, color: CrushapColors.textSecondary),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }

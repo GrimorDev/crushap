@@ -65,6 +65,17 @@ async function getPhotos(id) {
   return redis.lrange(photosKey(id), 0, -1);
 }
 
+/// One optional intro video per profile (not a gallery) — replacing an
+/// existing one is the route's job (delete the old file); this just points
+/// the profile at the new URL.
+async function setVideo(id, url) {
+  await redis.hset(userKey(id), { videoUrl: url });
+}
+
+async function removeVideo(id) {
+  await redis.hdel(userKey(id), 'videoUrl');
+}
+
 async function allUserIds() {
   return redis.smembers('users:all');
 }
@@ -99,6 +110,7 @@ function toPublicProfile(raw, { photos = [], distance = null } = {}) {
     lookingFor: raw.lookingFor || null,
     verified: raw.verified === '1',
     photos,
+    videoUrl: raw.videoUrl || null,
     distanceKm: distance,
   };
 }
@@ -111,6 +123,8 @@ module.exports = {
   addPhoto,
   removePhoto,
   getPhotos,
+  setVideo,
+  removeVideo,
   allUserIds,
   distanceKm,
   parseTags,

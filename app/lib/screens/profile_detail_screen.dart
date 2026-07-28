@@ -9,6 +9,7 @@ import '../widgets/core/app_chip.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
 import '../widgets/core/profile_action_sheet.dart';
+import '../widgets/core/video_preview.dart';
 
 /// The full-profile view the reference design's "About Me" screen implied
 /// but the swipe card alone (name + one-line bio + a few tags) never had
@@ -182,6 +183,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ],
                       ),
                     ),
+                    if (p.videoUrl != null)
+                      AspectRatio(
+                        aspectRatio: 340 / 440,
+                        child: CrushapVideoPreview(url: widget.api.mediaUrl(p.videoUrl)!),
+                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                       child: Column(

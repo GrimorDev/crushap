@@ -42,6 +42,7 @@ class _FiltersScreenState extends State<FiltersScreen> {
   late final Set<String> _tags = widget.session.filterTags.toSet();
   bool _locating = false;
   bool _locationRefreshed = false;
+  bool _locationFailed = false;
 
   Future<void> _apply() async {
     await widget.session.saveFilters(
@@ -56,15 +57,22 @@ class _FiltersScreenState extends State<FiltersScreen> {
   }
 
   Future<void> _refreshLocation() async {
-    setState(() => _locating = true);
+    setState(() {
+      _locating = true;
+      _locationFailed = false;
+    });
     final position = await LocationService.getCurrentPosition();
     if (position != null) {
       try {
         await widget.api.updateLocation(lat: position.latitude, lng: position.longitude);
         if (mounted) setState(() => _locationRefreshed = true);
       } catch (_) {
-        // Leave _locationRefreshed false — the row just stays actionable.
+        if (mounted) setState(() => _locationFailed = true);
       }
+    } else if (mounted) {
+      // Permission denied, service disabled, or timed out — say so instead
+      // of just quietly resetting the row with no feedback at all.
+      setState(() => _locationFailed = true);
     }
     if (mounted) setState(() => _locating = false);
   }
@@ -192,16 +200,24 @@ class _FiltersScreenState extends State<FiltersScreen> {
                           CrushapIcon(
                             'map-pin',
                             size: 18,
-                            color: _locationRefreshed ? CrushapColors.green1 : CrushapColors.textSecondary,
+                            color: _locationFailed
+                                ? CrushapColors.red1
+                                : _locationRefreshed
+                                    ? CrushapColors.green1
+                                    : CrushapColors.textSecondary,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             _locating
                                 ? t.locatingLabel
-                                : _locationRefreshed
-                                    ? t.locationSharedConfirmation
-                                    : t.refreshMyLocation,
-                            style: CrushapText.body.copyWith(color: CrushapColors.textSecondary),
+                                : _locationFailed
+                                    ? t.locationRefreshFailed
+                                    : _locationRefreshed
+                                        ? t.locationSharedConfirmation
+                                        : t.refreshMyLocation,
+                            style: CrushapText.body.copyWith(
+                              color: _locationFailed ? CrushapColors.red1 : CrushapColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),

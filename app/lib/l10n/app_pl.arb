@@ -46,6 +46,7 @@
   "locationSharedConfirmation": "Gotowe — odległości będą wyświetlane dokładnie.",
   "shareMyLocation": "Udostępnij lokalizację",
   "locatingLabel": "Lokalizowanie…",
+  "locationRefreshFailed": "Nie udało się ustalić lokalizacji. Sprawdź uprawnienia i spróbuj ponownie.",
 
   "welcomeBack": "Witaj ponownie",
   "logIn": "Zaloguj się",
@@ -133,6 +134,9 @@
   "editPhotoLabel": "Zmień zdjęcie",
   "addPhotoLabel": "Dodaj zdjęcie",
   "removePhotoLabel": "Usuń zdjęcie",
+  "videoSection": "Wideo powitalne",
+  "addVideoLabel": "Dodaj wideo",
+  "removeVideoLabel": "Usuń wideo",
   "verifiedBadge": "Zweryfikowany",
   "languageRow": "Język",
   "languageSystem": "Systemowy",

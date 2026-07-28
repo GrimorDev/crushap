@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// **'Locating…'**
   String get locatingLabel;
 
+  /// No description provided for @locationRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t get your location. Check permissions and try again.'**
+  String get locationRefreshFailed;
+
   /// No description provided for @welcomeBack.
   ///
   /// In en, this message translates to:
@@ -829,6 +835,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove photo'**
   String get removePhotoLabel;
+
+  /// No description provided for @videoSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro video'**
+  String get videoSection;
+
+  /// No description provided for @addVideoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add video'**
+  String get addVideoLabel;
+
+  /// No description provided for @removeVideoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove video'**
+  String get removeVideoLabel;
 
   /// No description provided for @verifiedBadge.
   ///

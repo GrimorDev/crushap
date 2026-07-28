@@ -11,6 +11,7 @@ import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
 import '../widgets/core/app_icon.dart';
 import '../widgets/core/app_icon_button.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/core/profile_action_sheet.dart';
 
 /// A single conversation thread, reached from ChatInboxScreen or
@@ -107,10 +108,14 @@ class _ChatScreenState extends State<ChatScreen> {
     if (action == ProfileAction.block) {
       try {
         await widget.api.blockUser(widget.matchId);
+        // Only leave the thread once the block actually took — otherwise
+        // the user would see this as "blocking worked" when the target is
+        // still fully matched/visible/messageable.
+        widget.onBack();
       } catch (_) {
-        // Fall through to onBack regardless — nothing useful to retry here.
+        // Left in the thread with no visible change — better than a false
+        // "blocked" signal; they can just try the menu again.
       }
-      widget.onBack();
       return;
     }
     final reason = await showReportReasonSheet(context);
@@ -164,7 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Expanded(
               child: messages == null
-                  ? const SizedBox.shrink()
+                  ? const CrushapLoading()
                   : messages.isEmpty
                       ? _EmptyThread(matchName: widget.matchName, t: t)
                       : ListView.separated(

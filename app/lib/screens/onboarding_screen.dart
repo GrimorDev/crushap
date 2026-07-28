@@ -262,10 +262,22 @@ class _WelcomeStep extends StatefulWidget {
   State<_WelcomeStep> createState() => _WelcomeStepState();
 }
 
+// The slide list itself is a fixed 3 entries (see build()) — kept as a
+// constant here so scheduling doesn't need to run from build() (which
+// reruns on any unrelated rebuild, e.g. a locale change, and would
+// restart the 4s countdown from scratch every time).
+const _slideCount = 3;
+
 class _WelcomeStepState extends State<_WelcomeStep> {
   final _pageController = PageController();
   Timer? _autoAdvance;
   int _page = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleAutoAdvance(_slideCount);
+  }
 
   void _scheduleAutoAdvance(int slideCount) {
     _autoAdvance?.cancel();
@@ -294,7 +306,6 @@ class _WelcomeStepState extends State<_WelcomeStep> {
       _WelcomeSlideData(icon: 'heart', title: t.onboardingSlide2Title, body: t.onboardingSlide2Body),
       _WelcomeSlideData(icon: 'message-circle', title: t.onboardingSlide3Title, body: t.onboardingSlide3Body),
     ];
-    _scheduleAutoAdvance(slides.length);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -302,7 +313,10 @@ class _WelcomeStepState extends State<_WelcomeStep> {
         Expanded(
           child: PageView(
             controller: _pageController,
-            onPageChanged: (i) => setState(() => _page = i),
+            onPageChanged: (i) {
+              setState(() => _page = i);
+              _scheduleAutoAdvance(_slideCount);
+            },
             children: [for (final s in slides) _WelcomeSlide(data: s)],
           ),
         ),

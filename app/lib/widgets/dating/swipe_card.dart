@@ -30,6 +30,7 @@ class CrushapSwipeCard extends StatelessWidget {
     this.onTapPhoto,
     this.onExpand,
     this.expandLabel = 'View profile',
+    this.hasVideo = false,
     this.width = 340,
     this.height = 460,
   });
@@ -58,6 +59,10 @@ class CrushapSwipeCard extends StatelessWidget {
   /// one-line bio, so this is the only way to see the rest.
   final VoidCallback? onExpand;
   final String expandLabel;
+  /// True if this profile has an intro video — shown as a small hint badge
+  /// next to their name; the clip itself only plays in the full profile
+  /// (see ProfileDetailScreen), not autoplaying mid-swipe.
+  final bool hasVideo;
   final double width;
   final double height;
 
@@ -221,6 +226,14 @@ class CrushapSwipeCard extends StatelessWidget {
                           size: 18,
                           color: CrushapColors.accentPrimary,
                         ),
+                      ),
+                    ],
+                    if (hasVideo) ...[
+                      const SizedBox(width: 6),
+                      const CrushapIcon(
+                        'video',
+                        size: 16,
+                        color: CrushapColors.textSecondary,
                       ),
                     ],
                   ],

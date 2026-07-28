@@ -7,6 +7,7 @@ import '../theme/colors.dart';
 import '../theme/typography.dart';
 import '../widgets/core/app_avatar.dart';
 import '../widgets/core/app_icon.dart';
+import '../widgets/core/app_loading.dart';
 import '../widgets/navigation/bottom_nav.dart';
 
 /// The "Chat" bottom-nav tab — a conversation inbox (one row per match,
@@ -44,8 +45,15 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
     try {
       final matches = await widget.api.matches();
       if (mounted) setState(() => _matches = matches);
-      final online = await widget.api.onlineAmong([for (final m in matches) m.profile.id]);
-      if (mounted) setState(() => _online = online);
+      // Presence is a nice-to-have overlay on the list, not a reason to
+      // blank a list that already loaded fine — a failure here used to
+      // fall into the outer catch and wipe out the just-fetched matches.
+      try {
+        final online = await widget.api.onlineAmong([for (final m in matches) m.profile.id]);
+        if (mounted) setState(() => _online = online);
+      } catch (_) {
+        // Leave presence dots off; the match list itself is still valid.
+      }
     } catch (_) {
       if (mounted) setState(() => _matches = const []);
     }
@@ -67,7 +75,7 @@ class _ChatInboxScreenState extends State<ChatInboxScreen> {
             ),
             Expanded(
               child: matches == null
-                  ? const SizedBox.shrink()
+                  ? const CrushapLoading()
                   : matches.isEmpty
                       ? Center(
                           child: Padding(

@@ -13,6 +13,7 @@ class Profile {
     this.gender,
     this.lookingFor,
     this.photos = const [],
+    this.videoUrl,
     this.showOnlineStatus,
   });
 
@@ -30,6 +31,9 @@ class Profile {
   /// unset — shown as the status pill on the swipe card.
   final String? lookingFor;
   final List<String> photos;
+  /// A single optional intro video, server-relative — not a gallery, just
+  /// one representative clip alongside the photos.
+  final String? videoUrl;
   /// Only ever present when this is the signed-in user's own profile
   /// (`GET/PATCH /api/me`) — the server omits it from everyone else's
   /// public profile shape, since it's a private preference, not something
@@ -57,6 +61,7 @@ class Profile {
       gender: j['gender'] as String?,
       lookingFor: j['lookingFor'] as String?,
       photos: (j['photos'] as List?)?.map((e) => e as String).toList() ?? const [],
+      videoUrl: j['videoUrl'] as String?,
       showOnlineStatus: j['showOnlineStatus'] as bool?,
     );
   }
